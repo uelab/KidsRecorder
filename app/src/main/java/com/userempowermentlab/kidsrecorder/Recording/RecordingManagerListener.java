@@ -6,5 +6,5 @@ package com.userempowermentlab.kidsrecorder.Recording;
 
 public interface RecordingManagerListener {
     // you can define any parameter as per your requirement
-    public void onRecordingStateChanged(RecordingStatus status);
+    public void onRecordingStateChanged(RecordingStatus status, String filename);
 }

@@ -7,6 +7,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 
+import com.userempowermentlab.kidsrecorder.Data.DataManager;
+
 /**
  * Created by mingrui on 7/16/2018.
  */
@@ -15,6 +17,7 @@ public class RecordingManager extends Service {
     private int recordingTime = 0; // 0 for manually stop recording; > 0 for limited recording time in ms
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
 
+    private DataManager manager;
     private RecordingManagerListener mListener;
     private Handler mHandler = new Handler();
     Runnable mTimerStopRecorder;
@@ -39,7 +42,7 @@ public class RecordingManager extends Service {
             public void run() {
                 StopRecording();
                 //notifying the holder that record is stopped due to timing
-                mListener.onRecordingStateChanged(RecordingStatus.RECORDING_TIME_UP);
+                mListener.onRecordingStateChanged(RecordingStatus.RECORDING_TIME_UP, recorder.getFilePath());
                 mHandler.removeCallbacks(mTimerStopRecorder);
             }
         };
@@ -65,6 +68,8 @@ public class RecordingManager extends Service {
                     "MyWakelockTag");
             wakeLock.acquire();
         }
+        //get singleton DataManager
+        manager = DataManager.getInstance();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -80,6 +85,8 @@ public class RecordingManager extends Service {
         mListener = listener;
     }
 
+    public void setManager() { }
+
     public void StartRecording(String filename) {
         recorder.setFilePath(filename);
         recorder.Start();
@@ -92,28 +99,31 @@ public class RecordingManager extends Service {
         recorder.setFilePath(filename);
         recordingTime = timeLimit;
         recorder.Start();
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STARTED);
+        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STARTED, recorder.getFilePath());
     }
 
     public void StopRecording() {
         if (recorder.isRecording()){
             recorder.Stop();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STOPPED);
+        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STOPPED, recorder.getFilePath());
+        if (manager != null) {
+            manager.newRecordingAdded(recorder.getFilePath());
+        }
     }
 
     public void PauseRecording() {
         if (recorder.isRecording()){
             recorder.Pause();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_PAUSED);
+        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_PAUSED, recorder.getFilePath());
     }
 
     public void ResumeRecording() {
         if (recorder.isRecording()){
             recorder.Resume();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_RESUMED);
+        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_RESUMED, recorder.getFilePath());
     }
 
 }

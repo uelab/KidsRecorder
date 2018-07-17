@@ -36,6 +36,8 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
         this.filePath = filePath;
     }
 
+    public String getFilePath() { return filePath; }
+
     public void Start(){
         if (filePath == null) return;
         isRecording = true;
