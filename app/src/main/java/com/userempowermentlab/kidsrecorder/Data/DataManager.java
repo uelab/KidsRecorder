@@ -1,7 +1,10 @@
 package com.userempowermentlab.kidsrecorder.Data;
 
+import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.icu.text.AlphabeticIndex;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
@@ -35,10 +38,15 @@ public class DataManager {
     private int maxFilesBeforeDelete = 0; // 0 - never delete; > 0 - delete the old files if more than the number of recording exists
     private String folderName = null; // the folder name of the recorded files
 
-    private ArrayList<String> mFolderFileList = new ArrayList<String>();
+    //file list arrays
+    private ArrayList<RecordItem> mFolderFileList;
     //we need the lists to be thread-safe
     private List<String> mFileUploading = Collections.synchronizedList(new ArrayList<String>());
     private List<String> mFileBuffer = Collections.synchronizedList(new ArrayList<String>());
+
+    //permanent storage. DB is for file information, Preferences is for uploading buffer
+    private RecordItemDAO recordItemDAO;
+    private List<RecordItem> recordLists;
     private Context context;
     private SharedPreferences preferences;
 
@@ -47,10 +55,30 @@ public class DataManager {
     //call the Initialize at first after set the folder name
     public void Initialize(Context context) {
         this.context = context;
-        scanFolder();
+
+        //db stuff
+        RecordItemRoomDatabase db = RecordItemRoomDatabase.getDatabase(context);
+        recordItemDAO = db.recordItemDAO();
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                mFolderFileList = new ArrayList<RecordItem>(recordItemDAO.getAllRecordings());
+
+                //update list
+                for (RecordItem item : mFolderFileList){
+                    final File record = new File(item.filename);
+                    if (!record.exists()) {
+                        mFolderFileList.remove(item);
+                        new deleteAsyncTask(recordItemDAO).execute(item);
+                    }
+                }
+            }
+        });
         loadBuffer();
     }
 
+    //singleton
     private DataManager(){}
     public static DataManager getInstance(){ return instance; }
 
@@ -79,6 +107,7 @@ public class DataManager {
 
     //buffer
     public void storeBuffer() {
+
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = preferences.edit();
@@ -91,12 +120,11 @@ public class DataManager {
     private void loadBuffer() {
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
         Gson gson = new Gson();
-        String json = preferences.getString("audioArrayList", null);
+        String json = preferences.getString("bufferList", null);
         Type type = new TypeToken<ArrayList<String>>() {}.getType();
         mFileBuffer = gson.fromJson(json, type);
 
         if (json == null){
-            Log.d("[RAY]", "loadBuffer: new buffer allocated");
             mFileBuffer = new ArrayList<String>();
         }
         //check if every file in bufferlist exists
@@ -137,6 +165,11 @@ public class DataManager {
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         }
+        RecordItem item = findItemByFilename(filename);
+        if (item != null) {
+            item.uploaded = true;
+            new updateAsyncTask(recordItemDAO).execute(item);
+        }
     }
 
     public void OnUploadError(String filename) {
@@ -151,6 +184,7 @@ public class DataManager {
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         } else {
+            if (!Helper.CheckNetworkConnected(context)) return;
             //upload again
             uploadFile(filename);
         }
@@ -170,9 +204,16 @@ public class DataManager {
     }
 
     //new recording added, clean old files
-    public void newRecordingAdded(String filename) {
-        Log.d("[RAY]", "Connected ? " + Helper.CheckNetworkConnected(context));
-        mFolderFileList.add(0, filename);
+    public void newRecordingAdded(String filename, String createdate, int duration) {
+        RecordItem newitem = new RecordItem();
+        newitem.filename = filename;
+        newitem.createDate = createdate;
+        newitem.duration = duration;
+        newitem.uploaded = false;
+
+        mFolderFileList.add(0, newitem);
+        new insertAsyncTask(recordItemDAO).execute(newitem);
+
         deleteFilesOutOfMaxFiles();
         //if no buffer, upload new files
         if (bufferSize == 0) {
@@ -187,63 +228,90 @@ public class DataManager {
     }
 
     //local file operations
-    // get list of all recording files in the folder
-    private void scanFolder() {
-        mFolderFileList.clear();
-        File folder = new File(folderName);
-        File[] listOfFiles = folder.listFiles(
-                new FilenameFilter() {
-                    public boolean accept(File dir, String filename)
-                    { return filename.endsWith(".wav"); } });
-
-        Arrays.sort(listOfFiles, new Comparator<File>() {
-            @Override
-            public int compare(File f1, File f2) {
-                //sort file modified dates by decreasing order
-                return Long.compare(f2.lastModified(), f1.lastModified());
-            }
-        });
-
-        for (File f : listOfFiles){
-            try {
-                mFolderFileList.add(f.getCanonicalPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-                continue;
-            }
-        }
-    }
-
     private void deleteFilesOutOfMaxFiles() {
         if (folderName != null){
             if (maxFilesBeforeDelete <= 0) return;
             int size = mFolderFileList.size();
             if (size > maxFilesBeforeDelete){
                 for (int i = size-1; i >= maxFilesBeforeDelete; --i){
-                    String fname = mFolderFileList.get(i);
+                    String fname = mFolderFileList.get(i).filename;
                     // if the file is in the buffer, we should wait until it's uploaded
                     if ( !(mFileBuffer.contains(fname) || mFileUploading.contains(fname)) ) {
-                        deleteFileAtLocation(fname);
+                        deleteFile(mFolderFileList.get(i));
                     }
                 }
             }
         }
     }
 
-    public void deleteFileAtLocation(String location) {
-        File file = new File(location);
+    public void deleteFile(RecordItem item) {
+        File file = new File(item.filename);
         file.delete();
-//        Log.d("[RAY]", "deleteFileAtLocation: "+location);
+//        Log.d("[RAY]", "deleteFileAtLocation: "+ item.filename + "uploaded? " + item.uploaded + " starting date: " + item.createDate);
 
         //remove from every list
-        mFolderFileList.remove(location);
+        mFolderFileList.remove(item);
+        new deleteAsyncTask(recordItemDAO).execute(item);
         synchronized (mFileBuffer) {
-            mFileBuffer.remove(location);
+            mFileBuffer.remove(item.filename);
         }
         synchronized (mFileUploading) {
-            mFileUploading.remove(location);
+            mFileUploading.remove(item.filename);
         }
     }
 
+    private RecordItem findItemByFilename(String fname) {
+        for(RecordItem item : mFolderFileList) {
+            if(item.filename == fname) {
+                return item;
+            }
+        }
+        return null;
+    }
 
+    //DB Operations
+    private static class insertAsyncTask extends AsyncTask<RecordItem, Void, Void> {
+
+        private RecordItemDAO mAsyncTaskDao;
+
+        insertAsyncTask(RecordItemDAO dao) {
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(final RecordItem... params) {
+            mAsyncTaskDao.insert(params[0]);
+            return null;
+        }
+    }
+
+    private static class deleteAsyncTask extends AsyncTask<RecordItem, Void, Void> {
+
+        private RecordItemDAO mAsyncTaskDao;
+
+        deleteAsyncTask(RecordItemDAO dao) {
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(final RecordItem... params) {
+            mAsyncTaskDao.delete(params[0]);
+            return null;
+        }
+    }
+
+    private static class updateAsyncTask extends AsyncTask<RecordItem, Void, Void> {
+
+        private RecordItemDAO mAsyncTaskDao;
+
+        updateAsyncTask(RecordItemDAO dao) {
+            mAsyncTaskDao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(final RecordItem... params) {
+            mAsyncTaskDao.update(params[0]);
+            return null;
+        }
+    }
 }

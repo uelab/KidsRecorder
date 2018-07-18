@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         if (checkAndRequestPermissions()) {
             StartRecording();
         }
-        Log.d("[RAY]", "recorder setted");
+//        Log.d("[RAY]", "recorder setted");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(RecordingManager.RECORDER_BROADCAST_ACTION);
@@ -65,14 +65,13 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_STARTED:
                         break;
                     case RECORDING_STOPPED:
-                        Log.d("[RAY]", "Broadcast !! Stop Notified");
+//                        Log.d("[RAY]", "Broadcast !! Stop Notified");
                         break;
                     case RECORDING_PAUSED:
                         break;
                     case RECORDING_RESUMED:
                         break;
                     case RECORDING_TIME_UP:
-                        Log.d("[RAY]", "Broadcast !! Time up Notified");
                         recordingManager.StartRecording(dataManager.getRecordingNameOfTime(), 5000);
                         break;
                 }
@@ -82,8 +81,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void StartRecording() {
-        Log.d("[RAY]", "recorder setting up");
-
         Intent recorderIntent = new Intent(this, RecordingManager.class);
         startService(recorderIntent);
         bindService(recorderIntent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -91,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean checkAndRequestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Log.d("main activity", "version ok");
             int permissionRecording = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
             int permissionStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
             List<String> listPermissionsNeeded = new ArrayList<>();

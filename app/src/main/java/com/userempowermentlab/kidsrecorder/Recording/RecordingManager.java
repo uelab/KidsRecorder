@@ -104,7 +104,7 @@ public class RecordingManager extends Service {
             recorder.Stop();
         }
         if (manager != null) {
-            manager.newRecordingAdded(recorder.getFilePath());
+            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration());
         }
         sendBroadCast(RecordingStatus.RECORDING_STOPPED);
     }

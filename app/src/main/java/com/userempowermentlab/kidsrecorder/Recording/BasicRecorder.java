@@ -10,6 +10,9 @@ import android.support.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import omrecorder.AudioChunk;
 import omrecorder.AudioRecordConfig;
@@ -28,6 +31,10 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
     private Recorder recorder = null;
     private boolean isRecording;
 
+    private String startDate; //start time
+    private long mStartMillis = 0;
+    private long duration = 0;
+
     public boolean isRecording() {
         return isRecording;
     }
@@ -38,9 +45,18 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
 
     public String getFilePath() { return filePath; }
 
+    public String getStartDate() { return startDate; }
+
+    public int getDuration() { return (int)(duration/1000); }
+
     public void Start(){
         if (filePath == null) return;
         isRecording = true;
+
+        startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        mStartMillis = System.currentTimeMillis();
+        duration = 0;
+
         if(recorder == null) {
             recorder = OmRecorder.wav(
                     new PullTransport.Default(mic(), BasicRecorder.this),
@@ -60,10 +76,14 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
                 recorder = null;
             }
         }
+        duration += (System.currentTimeMillis() - mStartMillis);
     }
 
     public void Pause(){
         isRecording = false;
+
+        duration += (System.currentTimeMillis() - mStartMillis);
+
         if (recorder != null){
             recorder.pauseRecording();
         }
@@ -71,6 +91,9 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
 
     public void Resume(){
         isRecording = true;
+
+        mStartMillis = System.currentTimeMillis();
+
         if (recorder != null){
             recorder.resumeRecording();
         }
