@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.userempowermentlab.kidsrecorder.Helper;
 import com.userempowermentlab.kidsrecorder.Recording.RecordingManager;
 import com.userempowermentlab.kidsrecorder.Recording.RecordingManagerListener;
 
@@ -112,6 +113,7 @@ public class DataManager {
     }
 
     private void uploadBuffer() {
+        if (!Helper.CheckNetworkConnected(context)) return;
         String filename;
         synchronized (mFileBuffer) {
             final String fname = mFileBuffer.remove(0);
@@ -126,6 +128,7 @@ public class DataManager {
 
     //uploading
     private void uploadFile(String fname) {
+        if (!Helper.CheckNetworkConnected(context)) return;
         String[] tokens = fname.split("/");
         DataUploader.AmazonAWSUploader(context, fname, "public/"+tokens[tokens.length-1]);
     }
@@ -149,6 +152,7 @@ public class DataManager {
             synchronized (mFileBuffer) {
                 mFileBuffer.add(0, filename);
             }
+            if (!Helper.CheckNetworkConnected(context)) return;
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         } else {
@@ -172,6 +176,7 @@ public class DataManager {
 
     //new recording added, clean old files
     public void newRecordingAdded(String filename) {
+        Log.d("[RAY]", "Connected ? " + Helper.CheckNetworkConnected(context));
         mFolderFileList.add(0, filename);
         deleteFilesOutOfMaxFiles();
         //if no buffer, upload new files
