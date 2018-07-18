@@ -180,6 +180,7 @@ public class DataManager {
             uploadFile(filename);
         } else {
             mFileBuffer.add(filename);
+            storeBuffer();
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         }
