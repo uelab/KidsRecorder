@@ -6,8 +6,11 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
 
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by mingrui on 7/16/2018.
@@ -25,11 +28,19 @@ public class RecordingManager extends Service {
     PowerManager.WakeLock wakeLock;
     private final IBinder mBinder = new LocalBinder();
 
-    public void setRecordingTime(int recordingTime) {
-        this.recordingTime = recordingTime;
+    public int getRecordingTime() {
+        return recordingTime;
     }
 
     public void setAlwaysRunning(boolean alwaysRunning) {
+        if (alwaysRunning){
+            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                    "MyWakelockTag");
+            wakeLock.acquire();
+        } else if (wakeLock != null) {
+            wakeLock.release();
+        }
         this.alwaysRunning = alwaysRunning;
     }
 
@@ -41,9 +52,10 @@ public class RecordingManager extends Service {
             @Override
             public void run() {
                 StopRecording();
-                //notifying the holder that record is stopped due to timing
-                mListener.onRecordingStateChanged(RecordingStatus.RECORDING_TIME_UP, recorder.getFilePath());
-                mHandler.removeCallbacks(mTimerStopRecorder);
+                if (mListener != null) {
+                    //notifying the holder that record is stopped due to timing
+                    mListener.onRecordingStateChanged(RecordingStatus.RECORDING_TIME_UP, recorder.getFilePath());
+                }
             }
         };
     }
@@ -62,12 +74,6 @@ public class RecordingManager extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (alwaysRunning){
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                    "MyWakelockTag");
-            wakeLock.acquire();
-        }
         //get singleton DataManager
         manager = DataManager.getInstance();
         return super.onStartCommand(intent, flags, startId);
@@ -85,30 +91,32 @@ public class RecordingManager extends Service {
         mListener = listener;
     }
 
-    public void setManager() { }
-
     public void StartRecording(String filename) {
         recorder.setFilePath(filename);
         recorder.Start();
         if (recordingTime > 0) {
             mHandler.postDelayed(mTimerStopRecorder, recordingTime);
         }
+        if (mListener != null) {
+            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STARTED, recorder.getFilePath());
+        }
+        Log.d("[RAY]", "Recording start");
     }
 
     public void StartRecording(String filename, int timeLimit){
-        recorder.setFilePath(filename);
         recordingTime = timeLimit;
-        recorder.Start();
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STARTED, recorder.getFilePath());
+        StartRecording(filename);
     }
 
     public void StopRecording() {
         if (recorder.isRecording()){
             recorder.Stop();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STOPPED, recorder.getFilePath());
         if (manager != null) {
             manager.newRecordingAdded(recorder.getFilePath());
+        }
+        if (mListener != null) {
+            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STOPPED, recorder.getFilePath());
         }
     }
 
@@ -116,14 +124,18 @@ public class RecordingManager extends Service {
         if (recorder.isRecording()){
             recorder.Pause();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_PAUSED, recorder.getFilePath());
+        if (mListener != null) {
+            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_PAUSED, recorder.getFilePath());
+        }
     }
 
     public void ResumeRecording() {
         if (recorder.isRecording()){
             recorder.Resume();
         }
-        mListener.onRecordingStateChanged(RecordingStatus.RECORDING_RESUMED, recorder.getFilePath());
+        if (mListener != null) {
+            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_RESUMED, recorder.getFilePath());
+        }
     }
 
 }
