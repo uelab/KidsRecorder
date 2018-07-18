@@ -5,13 +5,10 @@ import android.content.SharedPreferences;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.userempowermentlab.kidsrecorder.Helper;
-import com.userempowermentlab.kidsrecorder.Recording.RecordingManager;
-import com.userempowermentlab.kidsrecorder.Recording.RecordingManagerListener;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -24,8 +21,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by mingrui on 7/16/2018.

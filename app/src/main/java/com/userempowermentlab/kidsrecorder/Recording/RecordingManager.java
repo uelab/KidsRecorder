@@ -17,11 +17,11 @@ import static android.content.ContentValues.TAG;
  */
 
 public class RecordingManager extends Service {
+    public static final String RECORDER_BROADCAST_ACTION = "com.userempowermentlab.kidsrecorder.Recording.ACTION";
     private int recordingTime = 0; // 0 for manually stop recording; > 0 for limited recording time in ms
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
 
     private DataManager manager;
-    private RecordingManagerListener mListener;
     private Handler mHandler = new Handler();
     Runnable mTimerStopRecorder;
     private BasicRecorder recorder = null;
@@ -52,10 +52,7 @@ public class RecordingManager extends Service {
             @Override
             public void run() {
                 StopRecording();
-                if (mListener != null) {
-                    //notifying the holder that record is stopped due to timing
-                    mListener.onRecordingStateChanged(RecordingStatus.RECORDING_TIME_UP, recorder.getFilePath());
-                }
+                sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
             }
         };
     }
@@ -87,19 +84,13 @@ public class RecordingManager extends Service {
         }
     }
 
-    public void setmListener(RecordingManagerListener listener) {
-        mListener = listener;
-    }
-
     public void StartRecording(String filename) {
         recorder.setFilePath(filename);
         recorder.Start();
         if (recordingTime > 0) {
             mHandler.postDelayed(mTimerStopRecorder, recordingTime);
         }
-        if (mListener != null) {
-            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STARTED, recorder.getFilePath());
-        }
+        sendBroadCast(RecordingStatus.RECORDING_STARTED);
         Log.d("[RAY]", "Recording start");
     }
 
@@ -115,27 +106,27 @@ public class RecordingManager extends Service {
         if (manager != null) {
             manager.newRecordingAdded(recorder.getFilePath());
         }
-        if (mListener != null) {
-            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_STOPPED, recorder.getFilePath());
-        }
+        sendBroadCast(RecordingStatus.RECORDING_STOPPED);
     }
 
     public void PauseRecording() {
         if (recorder.isRecording()){
             recorder.Pause();
         }
-        if (mListener != null) {
-            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_PAUSED, recorder.getFilePath());
-        }
+        sendBroadCast(RecordingStatus.RECORDING_PAUSED);
     }
 
     public void ResumeRecording() {
         if (recorder.isRecording()){
             recorder.Resume();
         }
-        if (mListener != null) {
-            mListener.onRecordingStateChanged(RecordingStatus.RECORDING_RESUMED, recorder.getFilePath());
-        }
+        sendBroadCast(RecordingStatus.RECORDING_RESUMED);
     }
 
+    private void sendBroadCast(RecordingStatus status) {
+        Intent broadCastIntent = new Intent();
+        broadCastIntent.setAction(RECORDER_BROADCAST_ACTION);
+        broadCastIntent.putExtra("action", status);
+        sendBroadcast(broadCastIntent);
+    }
 }

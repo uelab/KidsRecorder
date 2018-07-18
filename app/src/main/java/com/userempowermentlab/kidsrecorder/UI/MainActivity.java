@@ -2,10 +2,12 @@ package com.userempowermentlab.kidsrecorder.UI;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -20,7 +22,6 @@ import android.widget.Toast;
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
 import com.userempowermentlab.kidsrecorder.R;
 import com.userempowermentlab.kidsrecorder.Recording.RecordingManager;
-import com.userempowermentlab.kidsrecorder.Recording.RecordingManagerListener;
 import com.userempowermentlab.kidsrecorder.Recording.RecordingStatus;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -31,10 +32,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements RecordingManagerListener{
+public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     private RecordingManager recordingManager;
     private DataManager dataManager;
+    private BroadcastReceiver receiver;
     private boolean serviceBound = false;
     MainActivity context = this;
 
@@ -51,6 +53,32 @@ public class MainActivity extends AppCompatActivity implements RecordingManagerL
             StartRecording();
         }
         Log.d("[RAY]", "recorder setted");
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(RecordingManager.RECORDER_BROADCAST_ACTION);
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //do something based on the recorder's status
+                RecordingStatus status = (RecordingStatus) intent.getSerializableExtra("action");
+                switch (status){
+                    case RECORDING_STARTED:
+                        break;
+                    case RECORDING_STOPPED:
+                        Log.d("[RAY]", "Broadcast !! Stop Notified");
+                        break;
+                    case RECORDING_PAUSED:
+                        break;
+                    case RECORDING_RESUMED:
+                        break;
+                    case RECORDING_TIME_UP:
+                        Log.d("[RAY]", "Broadcast !! Time up Notified");
+                        recordingManager.StartRecording(dataManager.getRecordingNameOfTime(), 5000);
+                        break;
+                }
+            }
+        };
+        registerReceiver(receiver, filter);
     }
 
     private void StartRecording() {
@@ -164,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements RecordingManagerL
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             RecordingManager.LocalBinder binder = (RecordingManager.LocalBinder) service;
             recordingManager = binder.getServiceInstance();
-            recordingManager.setmListener(context);
             serviceBound = true;
             try {
                 dataManager.setFolderName("KidsRecorder");
@@ -182,24 +209,5 @@ public class MainActivity extends AppCompatActivity implements RecordingManagerL
             serviceBound = false;
         }
     };
-
-    @Override
-    public void onRecordingStateChanged(RecordingStatus status, String filename) {
-        switch (status){
-            case RECORDING_STARTED:
-                break;
-            case RECORDING_STOPPED:
-                Log.d("[RAY]", "Stop Notified");
-                break;
-            case RECORDING_PAUSED:
-                break;
-            case RECORDING_RESUMED:
-                break;
-            case RECORDING_TIME_UP:
-                Log.d("[RAY]", "Time up Notified");
-                recordingManager.StartRecording(dataManager.getRecordingNameOfTime(), 5000);
-                break;
-        }
-    }
 
 }
