@@ -12,11 +12,16 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Chronometer;
 import android.widget.Toast;
 
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
@@ -34,11 +39,17 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
-    private RecordingManager recordingManager;
+    private RecordingManager recordingManager = null;
     private DataManager dataManager;
     private BroadcastReceiver receiver;
     private boolean serviceBound = false;
+    private boolean registeredReceiver = false;
     MainActivity context = this;
+    IntentFilter filter;
+
+    //UI
+    private Chronometer mChronometer = null;
+    private FloatingActionButton mRecordButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +57,24 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         AWSMobileClient.getInstance().initialize(this).execute();
 
+        setupUI();
+
         dataManager = DataManager.getInstance();
         dataManager.setMaxFilesBeforeDelete(5);
+        try {
+            dataManager.setFolderName("KidsRecorder");
+//            dataManager.setBufferSize(3);
+            dataManager.Initialize(context);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (checkAndRequestPermissions()) {
-            StartRecording();
+            StartService();
         }
-//        Log.d("[RAY]", "recorder setted");
 
-        IntentFilter filter = new IntentFilter();
+        filter = new IntentFilter();
         filter.addAction(RecordingManager.RECORDER_BROADCAST_ACTION);
         receiver = new BroadcastReceiver() {
             @Override
@@ -72,15 +92,54 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_RESUMED:
                         break;
                     case RECORDING_TIME_UP:
-                        recordingManager.StartRecording(dataManager.getRecordingNameOfTime(), 5000);
                         break;
                 }
             }
         };
+    }
+
+    private void setupUI() {
+        mChronometer = findViewById(R.id.chronometer);
+        mRecordButton = findViewById(R.id.recordBtn);
+
+        mRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (recordingManager == null) return;
+                if (recordingManager.isRecording()){
+                    recordingManager.StopRecording();
+                    mChronometer.stop();
+                    mRecordButton.setImageResource(R.drawable.ic_media_play);
+                } else {
+                    if (recordingManager == null) return;
+                    recordingManager.StartRecording(dataManager.getRecordingNameOfTime());
+                    mChronometer.setBase(SystemClock.elapsedRealtime());
+                    mChronometer.start();
+                    mRecordButton.setImageResource(R.drawable.ic_media_stop);
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registeredReceiver = true;
         registerReceiver(receiver, filter);
     }
 
-    private void StartRecording() {
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (registeredReceiver) {
+            unregisterReceiver(receiver);
+        }
+        registeredReceiver = false;
+    }
+
+
+
+    private void StartService() {
         Intent recorderIntent = new Intent(this, RecordingManager.class);
         startService(recorderIntent);
         bindService(recorderIntent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -135,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Phone state and storage permissions granted");
                         // process the normal flow
                         //else any one or both the permissions are not granted
-                        StartRecording();
+                        StartService();
                     } else {
                         Log.d(TAG, "Some permissions are not granted ask again ");
                         //permission is denied (this is the first time, when "never ask again" is not checked) so ask again explaining the usage of permission
@@ -189,15 +248,6 @@ public class MainActivity extends AppCompatActivity {
             RecordingManager.LocalBinder binder = (RecordingManager.LocalBinder) service;
             recordingManager = binder.getServiceInstance();
             serviceBound = true;
-            try {
-                dataManager.setFolderName("KidsRecorder");
-                dataManager.setBufferSize(3);
-                dataManager.Initialize(context);
-                recordingManager.StartRecording(dataManager.getRecordingNameOfTime(), 3000);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
         @Override
@@ -205,5 +255,11 @@ public class MainActivity extends AppCompatActivity {
             serviceBound = false;
         }
     };
+
+    private void startRecording() {
+
+    }
+
+    private void stopRecording() {}
 
 }

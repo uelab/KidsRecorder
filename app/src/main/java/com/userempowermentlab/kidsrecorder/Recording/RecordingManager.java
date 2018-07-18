@@ -44,6 +44,19 @@ public class RecordingManager extends Service {
         this.alwaysRunning = alwaysRunning;
     }
 
+    public int getRecordedTime() {
+        if (recorder != null && recorder.isRecording()) {
+            return recorder.getRecordedTime();
+        }
+        else return 0;
+    }
+
+    public boolean isRecording(){
+        if (recorder != null) {
+            return recorder.isRecording();
+        } else return false;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -127,6 +140,7 @@ public class RecordingManager extends Service {
         Intent broadCastIntent = new Intent();
         broadCastIntent.setAction(RECORDER_BROADCAST_ACTION);
         broadCastIntent.putExtra("action", status);
+        broadCastIntent.putExtra("filename", recorder.getFilePath());
         sendBroadcast(broadCastIntent);
     }
 }

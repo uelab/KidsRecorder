@@ -49,6 +49,13 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
 
     public int getDuration() { return (int)(duration/1000); }
 
+    public int getRecordedTime() {
+        if (isRecording) {
+            return (int)((System.currentTimeMillis() - mStartMillis + duration)/1000);
+        }
+        return 0;
+    } //return the elapsed time since the recording started;
+
     public void Start(){
         if (filePath == null) return;
         isRecording = true;
