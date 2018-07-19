@@ -68,7 +68,6 @@ public class RecordingManager extends Service {
                 sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
             }
         };
-        Log.d("[RAY]", "serviiiiiice!!!!!");
     }
 
     //returns the instance of the service

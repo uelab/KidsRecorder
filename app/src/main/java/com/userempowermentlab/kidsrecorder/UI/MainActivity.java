@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     //UI
     private Chronometer mChronometer = null;
     private FloatingActionButton mRecordButton = null;
-    private ActionBar actionBar = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         setupUI();
 
         dataManager = DataManager.getInstance();
-        dataManager.setMaxFilesBeforeDelete(5);
+        dataManager.setMaxFilesBeforeDelete(15);
         try {
             dataManager.setFolderName("KidsRecorder");
 //            dataManager.setBufferSize(3);

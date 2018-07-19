@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
@@ -17,12 +18,15 @@ import com.userempowermentlab.kidsrecorder.Data.DataManager;
 import com.userempowermentlab.kidsrecorder.Data.RecordItem;
 import com.userempowermentlab.kidsrecorder.UI.PlaybackFragment;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.RecordingsViewHolder>  {
     Context mContext;
     RecordItem item;
     DataManager dataManager;
+    boolean multiSelectionEnabled = false;
+    ArrayList<RecordItem> seletedRecords = new ArrayList<RecordItem>();
 
     public FileViewAdapter(Context context) {
         super();
@@ -82,18 +86,26 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    PlaybackFragment playbackFragment =
-                            new PlaybackFragment().newInstance(dataManager.getItemAtPos(holder.getLayoutPosition()));
+                if (multiSelectionEnabled) {
+                    if (selectItemAtPosition(holder.getLayoutPosition())){
+                        Log.d("[RAY]", "set gray!!!!");
+                        holder.cardView.setBackgroundResource(R.color.selectGray);
+                    } else {
+                        holder.cardView.setBackgroundColor(Color.WHITE);
+                    }
+                } else {
+                    try {
+                        PlaybackFragment playbackFragment =
+                                new PlaybackFragment().newInstance(dataManager.getItemAtPos(holder.getLayoutPosition()));
 
-                    FragmentTransaction transaction = ((FragmentActivity) mContext)
-                            .getSupportFragmentManager()
-                            .beginTransaction();
+                        FragmentTransaction transaction = ((FragmentActivity) mContext)
+                                .getSupportFragmentManager()
+                                .beginTransaction();
 
-                    playbackFragment.show(transaction, "dialog_playback");
-
-                } catch (Exception e) {
-                    Log.e("[RAY]", "exception", e);
+                        playbackFragment.show(transaction, "dialog_playback");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -101,9 +113,33 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                return false;
+                if (multiSelectionEnabled){
+                    if (selectItemAtPosition(holder.getLayoutPosition())){
+                        holder.cardView.setBackgroundResource(R.color.selectGray);
+                    } else {
+                        holder.cardView.setBackgroundColor(Color.WHITE);
+                    }
+                } else {
+                    multiSelectionEnabled = true;
+                    seletedRecords.add(dataManager.getItemAtPos(holder.getLayoutPosition()));
+                    holder.cardView.setBackgroundResource(R.color.selectGray);
+                }
+                return true;
             }
         });
+    }
+
+    private boolean selectItemAtPosition(int position) {
+        if (seletedRecords.contains(dataManager.getItemAtPos(position))){
+            seletedRecords.remove(dataManager.getItemAtPos(position));
+            if (seletedRecords.size() == 0){
+                multiSelectionEnabled = false;
+            }
+            return false;
+        } else {
+            seletedRecords.add(dataManager.getItemAtPos(position));
+            return true;
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)

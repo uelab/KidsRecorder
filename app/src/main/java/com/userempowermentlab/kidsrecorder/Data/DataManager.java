@@ -65,10 +65,11 @@ public class DataManager {
                 mFolderFileList = new ArrayList<RecordItem>(recordItemDAO.getAllRecordings());
 
                 //update list
-                for (RecordItem item : mFolderFileList){
+                for (int i = mFolderFileList.size()-1; i >= 0; --i){
+                    RecordItem item = mFolderFileList.get(i);
                     final File record = new File(item.path);
                     if (!record.exists()) {
-                        mFolderFileList.remove(item);
+                        mFolderFileList.remove(i);
                         new deleteAsyncTask(recordItemDAO).execute(item);
                     }
                 }

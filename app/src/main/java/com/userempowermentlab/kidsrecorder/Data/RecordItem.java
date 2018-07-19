@@ -6,12 +6,10 @@ import android.support.annotation.NonNull;
 
 @Entity(tableName = "recorditem_table")
 public class RecordItem {
-    @PrimaryKey(autoGenerate = true)
-    public int id;
-
     @NonNull
     public String filename;
 
+    @PrimaryKey
     @NonNull
     public String path;
 
