@@ -39,4 +39,12 @@ public class FileExplorerActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    @Override
+    public void onBackPressed() {
+        if (mAdapter.isMultiSelectionEnabled()){
+            mAdapter.deSelectAll();
+        } else {
+            super.onBackPressed();
+        }
+    }
 }

@@ -81,6 +81,8 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         } else {
             holder.vUploaded.setVisibility(View.VISIBLE);
         }
+        if (!multiSelectionEnabled)
+            holder.cardView.setBackgroundColor(Color.WHITE);
 
         // define an on click listener to open PlaybackFragment
         holder.cardView.setOnClickListener(new View.OnClickListener() {
@@ -140,6 +142,16 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
             seletedRecords.add(dataManager.getItemAtPos(position));
             return true;
         }
+    }
+
+    public void deSelectAll() {
+        seletedRecords.clear();
+        multiSelectionEnabled = false;
+        notifyDataSetChanged();
+    }
+
+    public boolean isMultiSelectionEnabled() {
+        return multiSelectionEnabled;
     }
 
     // Return the size of your dataset (invoked by the layout manager)
