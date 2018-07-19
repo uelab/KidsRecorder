@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">KidsRecorder</string>
+    <string name="settings">Settings</string>
+    <string name="recordings">Recordings</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

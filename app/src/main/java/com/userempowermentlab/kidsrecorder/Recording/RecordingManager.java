@@ -68,6 +68,7 @@ public class RecordingManager extends Service {
                 sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
             }
         };
+        Log.d("[RAY]", "serviiiiiice!!!!!");
     }
 
     //returns the instance of the service
@@ -84,9 +85,10 @@ public class RecordingManager extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         //get singleton DataManager
         manager = DataManager.getInstance();
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
     @Override

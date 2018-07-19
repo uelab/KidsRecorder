@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -17,9 +19,13 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Chronometer;
 import android.widget.Toast;
@@ -50,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     //UI
     private Chronometer mChronometer = null;
     private FloatingActionButton mRecordButton = null;
+    private ActionBar actionBar = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +105,27 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.actionbar, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_file:
+                Intent intent = new Intent(this, FileExplorerActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.action_settings:
+
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void setupUI() {
         mChronometer = findViewById(R.id.chronometer);
         mRecordButton = findViewById(R.id.recordBtn);
@@ -137,7 +165,13 @@ public class MainActivity extends AppCompatActivity {
         registeredReceiver = false;
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (serviceConnection != null){
+            unbindService(serviceConnection);
+        }
+    }
 
     private void StartService() {
         Intent recorderIntent = new Intent(this, RecordingManager.class);
@@ -255,11 +289,5 @@ public class MainActivity extends AppCompatActivity {
             serviceBound = false;
         }
     };
-
-    private void startRecording() {
-
-    }
-
-    private void stopRecording() {}
 
 }

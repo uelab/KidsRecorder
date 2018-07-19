@@ -12,6 +12,9 @@ public class RecordItem {
     @NonNull
     public String filename;
 
+    @NonNull
+    public String path;
+
     public int duration; //sec
     public String createDate;
 

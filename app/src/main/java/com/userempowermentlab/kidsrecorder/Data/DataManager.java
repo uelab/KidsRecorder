@@ -1,6 +1,5 @@
 package com.userempowermentlab.kidsrecorder.Data;
 
-import android.arch.lifecycle.LiveData;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.icu.text.AlphabeticIndex;
@@ -67,7 +66,7 @@ public class DataManager {
 
                 //update list
                 for (RecordItem item : mFolderFileList){
-                    final File record = new File(item.filename);
+                    final File record = new File(item.path);
                     if (!record.exists()) {
                         mFolderFileList.remove(item);
                         new deleteAsyncTask(recordItemDAO).execute(item);
@@ -103,6 +102,18 @@ public class DataManager {
 
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
+    }
+
+    //getters
+    public RecordItem getItemAtPos(int pos) {
+        if (mFolderFileList.size() > pos && pos >= 0){
+            return mFolderFileList.get(pos);
+        }
+        return null;
+    }
+
+    public int getItemCout() {
+        return mFolderFileList.size();
     }
 
     //buffer
@@ -165,7 +176,7 @@ public class DataManager {
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         }
-        RecordItem item = findItemByFilename(filename);
+        RecordItem item = findItemByPath(filename);
         if (item != null) {
             item.uploaded = true;
             new updateAsyncTask(recordItemDAO).execute(item);
@@ -206,7 +217,9 @@ public class DataManager {
     //new recording added, clean old files
     public void newRecordingAdded(String filename, String createdate, int duration) {
         RecordItem newitem = new RecordItem();
-        newitem.filename = filename;
+        newitem.path = filename;
+        String[] tokens = filename.split("/");
+        newitem.filename = tokens[tokens.length-1];
         newitem.createDate = createdate;
         newitem.duration = duration;
         newitem.uploaded = false;
@@ -234,7 +247,7 @@ public class DataManager {
             int size = mFolderFileList.size();
             if (size > maxFilesBeforeDelete){
                 for (int i = size-1; i >= maxFilesBeforeDelete; --i){
-                    String fname = mFolderFileList.get(i).filename;
+                    String fname = mFolderFileList.get(i).path;
                     // if the file is in the buffer, we should wait until it's uploaded
                     if ( !(mFileBuffer.contains(fname) || mFileUploading.contains(fname)) ) {
                         deleteFile(mFolderFileList.get(i));
@@ -245,7 +258,7 @@ public class DataManager {
     }
 
     public void deleteFile(RecordItem item) {
-        File file = new File(item.filename);
+        File file = new File(item.path);
         file.delete();
 //        Log.d("[RAY]", "deleteFileAtLocation: "+ item.filename + "uploaded? " + item.uploaded + " starting date: " + item.createDate);
 
@@ -253,16 +266,16 @@ public class DataManager {
         mFolderFileList.remove(item);
         new deleteAsyncTask(recordItemDAO).execute(item);
         synchronized (mFileBuffer) {
-            mFileBuffer.remove(item.filename);
+            mFileBuffer.remove(item.path);
         }
         synchronized (mFileUploading) {
-            mFileUploading.remove(item.filename);
+            mFileUploading.remove(item.path);
         }
     }
 
-    private RecordItem findItemByFilename(String fname) {
+    private RecordItem findItemByPath(String fname) {
         for(RecordItem item : mFolderFileList) {
-            if(item.filename == fname) {
+            if(item.path == fname) {
                 return item;
             }
         }
