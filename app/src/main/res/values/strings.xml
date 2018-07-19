@@ -2,7 +2,15 @@
     <string name="app_name">KidsRecorder</string>
     <string name="settings">Settings</string>
     <string name="recordings">Recordings</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
+    <!-- File explorer texts-->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="dialog_title_delete">DELETE</string>
+    <string name="dialog_text_delete">Are you sure to delete the files?</string>
+    <string name="dialog_action_yes">YES</string>
+    <string name="dialog_action_no">CANCEL</string>
+    <string name="toast_file_delete">File deleted</string>
+
 </resources>
