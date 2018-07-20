@@ -93,8 +93,12 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         } else {
             holder.vUploaded.setVisibility(View.VISIBLE);
         }
-        if (!multiSelectionEnabled)
+
+        if (multiSelectionEnabled && selectedRecords.contains(item)){
+            holder.cardView.setBackgroundResource(R.color.selectGray);
+        } else {
             holder.cardView.setBackgroundColor(Color.WHITE);
+        }
 
         // define an on click listener to open PlaybackFragment
         holder.cardView.setOnClickListener(new View.OnClickListener() {
@@ -164,6 +168,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
     public void deSelectAll() {
         selectedRecords.clear();
         multiSelectionEnabled = false;
+        if (mlistener != null) {
+            mlistener.onMultiselectEnabled(false);
+        }
         notifyDataSetChanged();
     }
 

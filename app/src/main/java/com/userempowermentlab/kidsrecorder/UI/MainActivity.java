@@ -155,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
 
         record_background = sharedPreferences.getBoolean("record_background", false);
         record_keepawake = sharedPreferences.getBoolean("record_keepawake", false);
-        Log.d("[keepawake]", " !!!! " + (record_background&record_keepawake));
 
         storage_autoupload = sharedPreferences.getBoolean("record_autorestart", false);
         storage_fileprefix = sharedPreferences.getString("storage_fileprefix", "");
