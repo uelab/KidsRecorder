@@ -49,7 +49,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
             String name = newValue.toString();
             name = name.replaceAll("\\W+", "");
             PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString("storage_fileprefix", name).commit();
-            storage_buffersize.setText(name);
+            storage_fileprefix.setText(name);
             return false;
         }
         return true;
