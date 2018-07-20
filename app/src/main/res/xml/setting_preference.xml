@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <android.support.v7.preference.PreferenceCategory
+        android:title="@string/settings_category_recording">
+
+        <android.support.v7.preference.CheckBoxPreference
+            android:key="record_timing"
+            android:title="@string/settings_record_timing"
+            android:defaultValue="false" />
+
+        <android.support.v7.preference.EditTextPreference
+            android:key="record_length"
+            android:title="@string/settings_record_length"
+            android:summary="@string/settings_record_length_desc"
+            android:inputType="number"
+            android:defaultValue="0" />
+
+        <android.support.v7.preference.CheckBoxPreference
+            android:key="record_autorestart"
+            android:title="@string/settings_record_autorestart"
+            android:defaultValue="false"/>
+
+        <android.support.v7.preference.CheckBoxPreference
+            android:key="record_background"
+            android:title="@string/settings_record_background"
+            android:summary="@string/settings_record_background_desc"
+            android:defaultValue="false"/>
+
+        <android.support.v7.preference.CheckBoxPreference
+            android:key="record_keepawake"
+            android:title="@string/settings_record_keepawake"
+            android:summary="@string/settings_record_keepawake_desc"
+            android:defaultValue="false"/>
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory
+        android:title="@string/settings_category_storage">
+
+        <android.support.v7.preference.CheckBoxPreference
+            android:key="storage_autoupload"
+            android:title="@string/settings_storage_autoupload"
+            android:defaultValue="false"/>
+
+        <android.support.v7.preference.EditTextPreference
+            android:key="storage_fileprefix"
+            android:title="@string/settings_storage_fileprefix"
+            android:summary="@string/settings_storage_fileprefix_desc"/>
+
+        <android.support.v7.preference.EditTextPreference
+            android:key="storage_buffersize"
+            android:title="@string/settings_storage_buffersize"
+            android:summary="@string/settings_storage_buffersize_desc"
+            android:inputType="number"
+            android:defaultValue="0" />
+
+        <android.support.v7.preference.EditTextPreference
+            android:key="storage_limit"
+            android:title="@string/settings_storage_limit"
+            android:summary="@string/settings_storage_buffersize_desc"
+            android:inputType="number"
+            android:defaultValue="0" />
+    </android.support.v7.preference.PreferenceCategory>
+
+    <android.support.v7.preference.PreferenceCategory
+        android:title="@string/settings_category_indicator">
+
+        <android.support.v14.preference.MultiSelectListPreference
+            android:key="indicator_event"
+            android:title="@string/settings_indicator_event"
+            android:summary="@string/settings_indicator_event_desc"
+            android:entries="@array/event_list"
+            android:entryValues="@array/event_list"
+            android:defaultValue="@array/empty_array"/>
+
+        <android.support.v14.preference.MultiSelectListPreference
+            android:key="indicator_style"
+            android:title="@string/settings_indicator_style"
+            android:summary="@string/settings_indicator_style_desc"
+            android:entries="@array/style_list"
+            android:entryValues="@array/event_list"
+            android:defaultValue="@array/empty_array"/>
+
+    </android.support.v7.preference.PreferenceCategory>
+</android.support.v7.preference.PreferenceScreen>

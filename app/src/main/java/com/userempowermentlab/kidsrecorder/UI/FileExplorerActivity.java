@@ -80,6 +80,9 @@ public class FileExplorerActivity extends AppCompatActivity implements FileVIewM
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
+            case R.id.action_upload:
+                mAdapter.UploadSelectedFiles();
+                return true;
             case R.id.action_delete:
                 mAdapter.ShowDeleteFileDialog();
                 return true;

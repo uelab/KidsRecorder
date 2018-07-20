@@ -31,7 +31,6 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-
         <activity android:name=".UI.AmazonAuthenticationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,11 +38,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UI.MainActivity"
-            android:launchMode="singleTop">
 
-        </activity>
+        <activity
+            android:name=".UI.MainActivity"
+            android:launchMode="singleTop"></activity>
         <activity android:name=".UI.FileExplorerActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".UI.MainActivity" />
+        </activity>
+
+        <activity android:name=".UI.SettingsActivity"
+            android:theme="@style/AppTheme.SettingsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".UI.MainActivity" />

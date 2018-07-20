@@ -2,25 +2,21 @@ package com.userempowermentlab.kidsrecorder.Data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.icu.text.AlphabeticIndex;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
+import android.support.v7.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.userempowermentlab.kidsrecorder.Helper;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -30,9 +26,9 @@ import java.util.List;
 
 //a singleton class for managing local resources
 public class DataManager {
-    private final String STORAGE = "com.userempowermentlab.kidsrecorder.Data";
     private static final DataManager instance = new DataManager();
 
+    private boolean autoUpload = false;
     private int bufferSize = 0; // buffer file or not; if buffered, the file will be delayed to upload after the buffer size is reached
     private int maxFilesBeforeDelete = 0; // 0 - never delete; > 0 - delete the old files if more than the number of recording exists
     private String folderName = null; // the folder name of the recorded files
@@ -87,6 +83,10 @@ public class DataManager {
         this.maxFilesBeforeDelete = maxFilesBeforeDelete;
     }
 
+    public void setAutoUpload(boolean autoUpload) {
+        this.autoUpload = autoUpload;
+    }
+
     public void setFolderName(String folderName) throws IOException{
         this.folderName = Environment.getExternalStorageDirectory() +
                 File.separator + folderName;
@@ -120,8 +120,7 @@ public class DataManager {
     //buffer
     public void storeBuffer() {
 
-        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
-
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
         String json = gson.toJson(mFileBuffer);
@@ -130,7 +129,7 @@ public class DataManager {
     }
 
     private void loadBuffer() {
-        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
         Gson gson = new Gson();
         String json = preferences.getString("bufferList", null);
         Type type = new TypeToken<ArrayList<String>>() {}.getType();
@@ -148,7 +147,7 @@ public class DataManager {
     }
 
     private void uploadBuffer() {
-        if (!Helper.CheckNetworkConnected(context)) return;
+        if (!autoUpload || !Helper.CheckNetworkConnected(context)) return;
         String filename;
         synchronized (mFileBuffer) {
             final String fname = mFileBuffer.remove(0);
@@ -162,8 +161,8 @@ public class DataManager {
     }
 
     //uploading
-    private void uploadFile(String fname) {
-        if (!Helper.CheckNetworkConnected(context)) return;
+    public void uploadFile(String fname) {
+        if (!Helper.CheckNetworkConnected(context) || mFileUploading.contains(fname)) return;
         String[] tokens = fname.split("/");
         DataUploader.AmazonAWSUploader(context, fname, "public/"+tokens[tokens.length-1]);
     }
@@ -229,15 +228,17 @@ public class DataManager {
         new insertAsyncTask(recordItemDAO).execute(newitem);
 
         deleteFilesOutOfMaxFiles();
-        //if no buffer, upload new files
-        if (bufferSize == 0) {
-            //upload
-            uploadFile(filename);
-        } else {
-            mFileBuffer.add(filename);
-            storeBuffer();
-            if (mFileBuffer.size() > bufferSize)
-                uploadBuffer();
+        if (autoUpload) {
+            //if no buffer, upload new files
+            if (bufferSize == 0) {
+                //upload
+                uploadFile(filename);
+            } else {
+                mFileBuffer.add(filename);
+                storeBuffer();
+                if (mFileBuffer.size() > bufferSize)
+                    uploadBuffer();
+            }
         }
     }
 

@@ -206,7 +206,19 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         alert.show();
     }
 
-    public void removeSelectedFiles() {
+    public void UploadSelectedFiles() {
+        if (selectedRecords.size() > 0) {
+            for (RecordItem item : selectedRecords){
+                if (!item.uploaded)
+                    dataManager.uploadFile(item.path);
+            }
+        }
+        selectedRecords.clear();
+        multiSelectionEnabled = false;
+        notifyDataSetChanged();
+    }
+
+    private void removeSelectedFiles() {
         //remove item from db, recyclerview and storage
         if (selectedRecords.size() > 0) {
             for (RecordItem item : selectedRecords){

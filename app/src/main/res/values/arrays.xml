@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="event_list">
+        <item>Start Recording</item>
+        <item>Stop Recording</item>
+        <item>Pause Recording</item>
+        <item>Resume Recording</item>
+    </string-array>
+
+    <string-array name="style_list">
+        <item>Vibration</item>
+        <item>Sould</item>
+        <item>StatusBar</item>
+        <item>Toast</item>
+    </string-array>
+
+    <string-array name="empty_array">
+    </string-array>
+</resources>

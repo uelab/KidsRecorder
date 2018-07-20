@@ -9,19 +9,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,7 +48,20 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver receiver;
     private boolean serviceBound = false;
     private boolean registeredReceiver = false;
-    MainActivity context = this;
+
+    //recording settings
+    private int record_length = 5;
+    private int buffer_size = 5;
+    private boolean record_autorestart = false;
+    private boolean record_background = false;
+    private boolean record_keepawake = false;
+    private boolean storage_autoupload = false;
+    private String storage_fileprefix = "";
+    private int storage_buffersize = 0;
+    private int storage_limit = 0;
+
+    SharedPreferences sharedPreferences;
+    Context context;
     IntentFilter filter;
 
     //UI
@@ -64,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
         AWSMobileClient.getInstance().initialize(this).execute();
 
         setupUI();
-
+        context = getApplicationContext();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         dataManager = DataManager.getInstance();
         dataManager.setMaxFilesBeforeDelete(15);
         try {
@@ -98,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_RESUMED:
                         break;
                     case RECORDING_TIME_UP:
+                        if (record_autorestart){
+                            startRecording();
+                        }
                         break;
                 }
             }
@@ -113,16 +128,35 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
         switch (item.getItemId()){
             case R.id.action_file:
-                Intent intent = new Intent(this, FileExplorerActivity.class);
+                intent = new Intent(this, FileExplorerActivity.class);
                 startActivity(intent);
                 return true;
             case R.id.action_settings:
-
+                intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateRecordSettings(){
+        boolean record_timing = sharedPreferences.getBoolean("record_timing", false);
+        record_length = sharedPreferences.getInt("record_length", 0);
+        if (record_timing == false) record_length = 0;
+        record_autorestart = sharedPreferences.getBoolean("record_autorestart", false);
+        record_background = sharedPreferences.getBoolean("record_background", false);
+        record_keepawake = sharedPreferences.getBoolean("record_keepawake", false);
+        storage_autoupload = sharedPreferences.getBoolean("record_autorestart", false);
+        storage_fileprefix = sharedPreferences.getString("storage_fileprefix", "");
+        storage_buffersize = sharedPreferences.getInt("storage_buffersize", 0);
+        storage_limit = sharedPreferences.getInt("storage_limit", 0);
+
+        dataManager.setBufferSize(storage_buffersize);
+        dataManager.setMaxFilesBeforeDelete(storage_limit);
+        dataManager.setAutoUpload(storage_autoupload);
     }
 
     private void setupUI() {
@@ -134,18 +168,29 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (recordingManager == null) return;
                 if (recordingManager.isRecording()){
-                    recordingManager.StopRecording();
-                    mChronometer.stop();
-                    mRecordButton.setImageResource(R.drawable.ic_media_play);
+                    stopRecording();
                 } else {
-                    if (recordingManager == null) return;
-                    recordingManager.StartRecording(dataManager.getRecordingNameOfTime());
-                    mChronometer.setBase(SystemClock.elapsedRealtime());
-                    mChronometer.start();
-                    mRecordButton.setImageResource(R.drawable.ic_media_stop);
+                    startRecording();
                 }
             }
         });
+    }
+
+    void stopRecording() {
+        if (recordingManager == null) return;
+        recordingManager.StopRecording();
+        mChronometer.stop();
+        mRecordButton.setImageResource(R.drawable.ic_media_play);
+    }
+
+    void startRecording(){
+        if (recordingManager == null) return;
+        updateRecordSettings();
+        recordingManager.setAlwaysRunning(record_keepawake & record_background);
+        recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), record_length);
+        mChronometer.setBase(SystemClock.elapsedRealtime());
+        mChronometer.start();
+        mRecordButton.setImageResource(R.drawable.ic_media_stop);
     }
 
     @Override
@@ -165,8 +210,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (!record_background && recordingManager != null && recordingManager.isRecording()){
+            stopRecording();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+
         if (serviceConnection != null){
             unbindService(serviceConnection);
         }
