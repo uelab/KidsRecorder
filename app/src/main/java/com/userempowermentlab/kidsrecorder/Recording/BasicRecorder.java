@@ -7,6 +7,7 @@ import android.media.MediaRecorder;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +60,6 @@ public class BasicRecorder implements PullTransport.OnAudioChunkPulledListener{
     public void Start(){
         if (filePath == null) return;
         isRecording = true;
-
         startDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         mStartMillis = System.currentTimeMillis();
         duration = 0;

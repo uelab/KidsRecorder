@@ -52,6 +52,7 @@ public class RecordingManager extends Service {
     }
 
     public boolean isRecording(){
+
         if (recorder != null) {
             return recorder.isRecording();
         } else return false;
@@ -64,8 +65,8 @@ public class RecordingManager extends Service {
         mTimerStopRecorder = new Runnable() {
             @Override
             public void run() {
-                StopRecording();
                 sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
+                StopRecording();
             }
         };
     }
@@ -109,11 +110,12 @@ public class RecordingManager extends Service {
     }
 
     public void StartRecording(String filename, int timeLimit){
-        recordingTime = timeLimit;
+        recordingTime = timeLimit*1000;
         StartRecording(filename);
     }
 
     public void StopRecording() {
+        mHandler.removeCallbacks(mTimerStopRecorder);
         if (recorder.isRecording()){
             recorder.Stop();
         }

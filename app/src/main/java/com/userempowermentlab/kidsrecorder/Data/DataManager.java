@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

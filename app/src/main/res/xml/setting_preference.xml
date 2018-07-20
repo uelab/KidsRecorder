@@ -14,7 +14,8 @@
             android:key="record_length"
             android:title="@string/settings_record_length"
             android:summary="@string/settings_record_length_desc"
-            android:inputType="number"
+            android:digits="0123456789"
+            android:inputType="numberPassword"
             android:defaultValue="0" />
 
         <android.support.v7.preference.CheckBoxPreference
@@ -52,14 +53,16 @@
             android:key="storage_buffersize"
             android:title="@string/settings_storage_buffersize"
             android:summary="@string/settings_storage_buffersize_desc"
-            android:inputType="number"
+            android:digits="0123456789"
+            android:inputType="numberPassword"
             android:defaultValue="0" />
 
         <android.support.v7.preference.EditTextPreference
             android:key="storage_limit"
             android:title="@string/settings_storage_limit"
             android:summary="@string/settings_storage_buffersize_desc"
-            android:inputType="number"
+            android:digits="0123456789"
+            android:inputType="numberPassword"
             android:defaultValue="0" />
     </android.support.v7.preference.PreferenceCategory>
 

@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         AWSMobileClient.getInstance().initialize(this).execute();
 
         setupUI();
-        context = getApplicationContext();
+        context = this;
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         dataManager = DataManager.getInstance();
         dataManager.setMaxFilesBeforeDelete(15);
@@ -101,9 +101,12 @@ public class MainActivity extends AppCompatActivity {
                 RecordingStatus status = (RecordingStatus) intent.getSerializableExtra("action");
                 switch (status){
                     case RECORDING_STARTED:
+                        //the recording start, not because the user pressed the button
+                        startRecrodingUI();
                         break;
                     case RECORDING_STOPPED:
-//                        Log.d("[RAY]", "Broadcast !! Stop Notified");
+                        //the recording stopped, not because the user pressed the button
+                        stopRecordingUI();
                         break;
                     case RECORDING_PAUSED:
                         break;
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case RECORDING_TIME_UP:
                         if (record_autorestart){
+                            Log.d("[RAY]", "timeup!!!!! restart!!!!");
                             startRecording();
                         }
                         break;
@@ -144,15 +148,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateRecordSettings(){
         boolean record_timing = sharedPreferences.getBoolean("record_timing", false);
-        record_length = sharedPreferences.getInt("record_length", 0);
+        String tempstring = sharedPreferences.getString("record_length", "0");
+        record_length = Integer.parseInt(tempstring);
         if (record_timing == false) record_length = 0;
         record_autorestart = sharedPreferences.getBoolean("record_autorestart", false);
+
         record_background = sharedPreferences.getBoolean("record_background", false);
         record_keepawake = sharedPreferences.getBoolean("record_keepawake", false);
+        Log.d("[keepawake]", " !!!! " + (record_background&record_keepawake));
+
         storage_autoupload = sharedPreferences.getBoolean("record_autorestart", false);
         storage_fileprefix = sharedPreferences.getString("storage_fileprefix", "");
-        storage_buffersize = sharedPreferences.getInt("storage_buffersize", 0);
-        storage_limit = sharedPreferences.getInt("storage_limit", 0);
+        tempstring = sharedPreferences.getString("storage_buffersize", "0");
+        storage_buffersize = Integer.parseInt(tempstring);
+        tempstring = sharedPreferences.getString("storage_limit", "0");
+        storage_limit = Integer.parseInt(tempstring);
 
         dataManager.setBufferSize(storage_buffersize);
         dataManager.setMaxFilesBeforeDelete(storage_limit);
@@ -178,7 +188,11 @@ public class MainActivity extends AppCompatActivity {
 
     void stopRecording() {
         if (recordingManager == null) return;
-        recordingManager.StopRecording();
+        if (recordingManager.isRecording())
+            recordingManager.StopRecording();
+    }
+
+    void stopRecordingUI() {
         mChronometer.stop();
         mRecordButton.setImageResource(R.drawable.ic_media_play);
     }
@@ -188,6 +202,9 @@ public class MainActivity extends AppCompatActivity {
         updateRecordSettings();
         recordingManager.setAlwaysRunning(record_keepawake & record_background);
         recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), record_length);
+    }
+
+    void startRecrodingUI() {
         mChronometer.setBase(SystemClock.elapsedRealtime());
         mChronometer.start();
         mRecordButton.setImageResource(R.drawable.ic_media_stop);

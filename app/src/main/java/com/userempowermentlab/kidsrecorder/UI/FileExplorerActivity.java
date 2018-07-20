@@ -24,6 +24,7 @@ public class FileExplorerActivity extends AppCompatActivity implements FileVIewM
     //UI
     MenuItem itemDelete;
     MenuItem itemShare;
+    MenuItem itemUpload;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +62,7 @@ public class FileExplorerActivity extends AppCompatActivity implements FileVIewM
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.fileactionbar, menu);
+        itemUpload = menu.findItem(R.id.action_upload);
         itemDelete = menu.findItem(R.id.action_delete);
         itemShare = menu.findItem(R.id.action_share);
         return super.onCreateOptionsMenu(menu);
@@ -69,9 +71,11 @@ public class FileExplorerActivity extends AppCompatActivity implements FileVIewM
     @Override
     public void onMultiselectEnabled(boolean enabled) {
         if (enabled){
+            itemUpload.setVisible(true);
             itemShare.setVisible(true);
             itemDelete.setVisible(true);
         } else {
+            itemUpload.setVisible(false);
             itemShare.setVisible(false);
             itemDelete.setVisible(false);
         }
