@@ -33,6 +33,9 @@ import android.view.View;
 import android.widget.Chronometer;
 import android.widget.Toast;
 
+import com.amazonaws.mobile.auth.core.IdentityManager;
+import com.amazonaws.mobile.auth.core.SignInStateChangeListener;
+import com.amazonaws.mobile.auth.ui.SignInUI;
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
 import com.userempowermentlab.kidsrecorder.R;
 import com.userempowermentlab.kidsrecorder.Recording.RecordingManager;
@@ -134,7 +137,6 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case RECORDING_TIME_UP:
                         if (record_autorestart){
-                            Log.d("[RAY]", "timeup!!!!! restart!!!!");
                             startRecording();
                         }
                         break;
@@ -161,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_settings:
                 intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+                return true;
+            case R.id.action_signout:
+                IdentityManager.getDefaultIdentityManager().signOut();
                 return true;
         }
         return super.onOptionsItemSelected(item);
