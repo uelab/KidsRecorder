@@ -1,14 +1,25 @@
 package com.userempowermentlab.kidsrecorder.Recording;
 
+import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
+import com.userempowermentlab.kidsrecorder.R;
+import com.userempowermentlab.kidsrecorder.UI.MainActivity;
 
 import static android.content.ContentValues.TAG;
 
@@ -99,6 +110,35 @@ public class RecordingManager extends Service {
         }
     }
 
+    public void createNotification() {
+        NotificationManager mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createChannel(mNotifyManager);
+        NotificationCompat.Builder buildier = new NotificationCompat.Builder(this.getApplicationContext());
+        Intent intent = new Intent(this, MainActivity.class);
+
+        buildier.setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
+                .setContentTitle(getResources().getString(R.string.isrecording))
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setOngoing(true)
+                .setWhen(System.currentTimeMillis());
+        mNotifyManager.notify(0, buildier.build());
+    }
+
+    public void cancelNotification() {
+        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(0);
+    }
+
+    @TargetApi(26)
+    private void createChannel(NotificationManager notificationManager) {
+        String name = getResources().getString(R.string.isrecording);
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+
+        NotificationChannel mChannel = new NotificationChannel(name, name, importance);
+        mChannel.enableLights(true);
+        notificationManager.createNotificationChannel(mChannel);
+    }
+
     public void StartRecording(String filename) {
         recorder.setFilePath(filename);
         recorder.Start();
@@ -115,6 +155,7 @@ public class RecordingManager extends Service {
     }
 
     public void StopRecording() {
+        Log.d("[RAY]", "Recording Stopped");
         mHandler.removeCallbacks(mTimerStopRecorder);
         if (recorder.isRecording()){
             recorder.Stop();

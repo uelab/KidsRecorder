@@ -11,9 +11,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -40,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
@@ -59,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private String storage_fileprefix = "";
     private int storage_buffersize = 0;
     private int storage_limit = 0;
+    Set<String> notifyEvents = null;
+    Set<String> notifyStyles = null;
 
     SharedPreferences sharedPreferences;
     Context context;
@@ -103,10 +111,22 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_STARTED:
                         //the recording start, not because the user pressed the button
                         startRecrodingUI();
+                        if (notifyEvents != null && notifyEvents.contains(getResources().getString(R.string.start))) {
+                            makeIndicator(getResources().getString(R.string.start));
+                        }
                         break;
                     case RECORDING_STOPPED:
                         //the recording stopped, not because the user pressed the button
                         stopRecordingUI();
+                        if (notifyEvents != null){
+                            if (notifyEvents.contains(getResources().getString(R.string.stop))) {
+                                makeIndicator(getResources().getString(R.string.stop));
+                            } else if (notifyStyles != null && notifyStyles.contains(R.string.statusBar)) {
+                                //if stop is not selected as event, but start is and there's status bar notification
+                                //we need to cancel it
+                                recordingManager.cancelNotification();
+                            }
+                        }
                         break;
                     case RECORDING_PAUSED:
                         break;
@@ -163,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
         tempstring = sharedPreferences.getString("storage_limit", "0");
         storage_limit = Integer.parseInt(tempstring);
 
+        notifyEvents = sharedPreferences.getStringSet("indicator_event", null);
+        notifyStyles = sharedPreferences.getStringSet("indicator_style", null);
+
         dataManager.setBufferSize(storage_buffersize);
         dataManager.setMaxFilesBeforeDelete(storage_limit);
         dataManager.setAutoUpload(storage_autoupload);
@@ -209,6 +232,42 @@ public class MainActivity extends AppCompatActivity {
         mRecordButton.setImageResource(R.drawable.ic_media_stop);
     }
 
+    void makeIndicator(String event) {
+        if (notifyStyles == null) return;
+        if (notifyStyles.contains(getResources().getString(R.string.vibration))) {
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                v.vibrate(VibrationEffect.createOneShot(700,VibrationEffect.DEFAULT_AMPLITUDE));
+            }else{
+                //deprecated in API 26
+                v.vibrate(700);
+            }
+        }
+        if (notifyStyles.contains(getResources().getString(R.string.sound))){
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            r.play();
+        }
+        if (notifyStyles.contains(getResources().getString(R.string.statusBar))) {
+            if (recordingManager != null) {
+                if (event == getResources().getString(R.string.start)) {
+                    recordingManager.createNotification();
+                } else if (event == getResources().getString(R.string.stop)) {
+                    recordingManager.cancelNotification();
+                }
+            }
+        }
+        if (notifyStyles.contains(getResources().getString(R.string.toast))) {
+            if (event == getResources().getString(R.string.start)) {
+                Toast.makeText(this, getResources().getString(R.string.isrecording),
+                        Toast.LENGTH_LONG).show();
+            } else if (event == getResources().getString(R.string.stop)) {
+                Toast.makeText(this, getResources().getString(R.string.notrecording),
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -229,7 +288,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (!record_background && recordingManager != null && recordingManager.isRecording()){
+            Log.d("[RAY]", "onStop: called!!!!!!!!!!");
             stopRecording();
+            stopRecordingUI();
         }
     }
 

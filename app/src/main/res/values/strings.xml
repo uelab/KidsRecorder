@@ -6,6 +6,16 @@
     <string name="delete">Delete</string>
     <string name="share">Share</string>
 
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="vibration">Vibration</string>
+    <string name="sound">Sound</string>
+    <string name="statusBar">StatusBar</string>
+    <string name="toast">Toast</string>
+
+    <string name="isrecording">Recording...</string>
+    <string name="notrecording">Recording stopped.</string>
+
     <!-- File explorer texts-->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="dialog_title_delete">DELETE</string>

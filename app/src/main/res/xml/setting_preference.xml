@@ -74,16 +74,14 @@
             android:title="@string/settings_indicator_event"
             android:summary="@string/settings_indicator_event_desc"
             android:entries="@array/event_list"
-            android:entryValues="@array/event_list"
-            android:defaultValue="@array/empty_array"/>
+            android:entryValues="@array/event_list"/>
 
         <android.support.v14.preference.MultiSelectListPreference
             android:key="indicator_style"
             android:title="@string/settings_indicator_style"
             android:summary="@string/settings_indicator_style_desc"
             android:entries="@array/style_list"
-            android:entryValues="@array/event_list"
-            android:defaultValue="@array/empty_array"/>
+            android:entryValues="@array/style_list"/>
 
     </android.support.v7.preference.PreferenceCategory>
 </android.support.v7.preference.PreferenceScreen>
