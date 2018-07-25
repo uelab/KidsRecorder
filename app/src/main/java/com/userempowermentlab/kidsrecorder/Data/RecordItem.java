@@ -16,5 +16,7 @@ public class RecordItem {
     public int duration; //sec
     public String createDate;
 
+    public boolean should_keep; //whether the clip should be kept and upload
+
     public boolean uploaded;
 }

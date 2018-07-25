@@ -31,6 +31,8 @@ public class RecordingManager extends Service {
     public static final String RECORDER_BROADCAST_ACTION = "com.userempowermentlab.kidsrecorder.Recording.ACTION";
     private int recordingTime = 0; // 0 for manually stop recording; > 0 for limited recording time in ms
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
+    private int preceding_files = 0; //enable preceding record (also record n preceding files before the real record start)
+    private boolean should_keep = true; // if should_keep && auto_upload, the file would be upload, otherwise it won't
 
     private DataManager manager;
     private Handler mHandler = new Handler();
@@ -53,6 +55,14 @@ public class RecordingManager extends Service {
             wakeLock.release();
         }
         this.alwaysRunning = alwaysRunning;
+    }
+
+    public void setPreceding_files(int preceding_files) {
+        this.preceding_files = preceding_files;
+    }
+
+    public void setShould_keep(boolean should_keep) {
+        this.should_keep = should_keep;
     }
 
     public int getRecordedTime() {
@@ -140,12 +150,12 @@ public class RecordingManager extends Service {
     }
 
     public void StartRecording(String filename) {
+        sendBroadCast(RecordingStatus.RECORDING_STARTED);
         recorder.setFilePath(filename);
         recorder.Start();
         if (recordingTime > 0) {
             mHandler.postDelayed(mTimerStopRecorder, recordingTime);
         }
-        sendBroadCast(RecordingStatus.RECORDING_STARTED);
         Log.d("[RAY]", "Recording start");
     }
 
@@ -162,17 +172,9 @@ public class RecordingManager extends Service {
             recorder.Stop();
         }
         if (manager != null) {
-            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration());
+            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration(), should_keep, preceding_files);
         }
         sendBroadCast(RecordingStatus.RECORDING_STOPPED);
-    }
-
-    private void _startRecording(){
-
-    }
-
-    private void _stopRecording(){
-
     }
 
     public void PauseRecording() {

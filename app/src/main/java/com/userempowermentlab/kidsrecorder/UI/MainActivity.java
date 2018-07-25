@@ -60,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
 
     //recording settings
     private int record_length = 5;
-    private boolean record_autorestart = false;
     private boolean record_background = false;
     private boolean record_keepawake = false;
+    private boolean record_autorestart = false;
     private boolean storage_autoupload = false;
     private String storage_fileprefix = "";
     private int storage_buffersize = 0;
@@ -137,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_TIME_UP:
                         if (record_autorestart){
                             startRecording();
+                            startRecrodingUI();
                         }
                         break;
                 }
@@ -176,11 +177,11 @@ public class MainActivity extends AppCompatActivity {
         record_length = Integer.parseInt(tempstring);
         if (record_timing == false) record_length = 0;
         record_autorestart = sharedPreferences.getBoolean("record_autorestart", false);
-
+        
         record_background = sharedPreferences.getBoolean("record_background", false);
         record_keepawake = sharedPreferences.getBoolean("record_keepawake", false);
 
-        storage_autoupload = sharedPreferences.getBoolean("record_autorestart", false);
+        storage_autoupload = sharedPreferences.getBoolean("storage_autoupload", false);
         storage_fileprefix = sharedPreferences.getString("storage_fileprefix", "");
         tempstring = sharedPreferences.getString("storage_buffersize", "0");
         storage_buffersize = Integer.parseInt(tempstring);

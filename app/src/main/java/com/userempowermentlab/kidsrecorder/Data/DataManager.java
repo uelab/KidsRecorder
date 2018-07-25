@@ -40,9 +40,11 @@ public class DataManager {
     private List<String> mFileUploading = Collections.synchronizedList(new ArrayList<String>());
     private List<String> mFileBuffer = Collections.synchronizedList(new ArrayList<String>());
 
+    //if the clip is not keeped, we store them in this buffer
+    private List<RecordItem> mShouldNotKeepBuffer = new ArrayList<RecordItem>();
+
     //permanent storage. DB is for file information, Preferences is for uploading buffer
     private RecordItemDAO recordItemDAO;
-    private List<RecordItem> recordLists;
     private Context context;
     private SharedPreferences preferences;
 
@@ -124,21 +126,36 @@ public class DataManager {
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(mFileBuffer);
-        editor.putString("bufferList", json);
+        String buffer_json = gson.toJson(mFileBuffer);
+        editor.putString("bufferList", buffer_json);
+        String notkeep_json = gson.toJson(mShouldNotKeepBuffer);
+        editor.putString("shouldnotbuffer", notkeep_json);
         editor.apply();
     }
 
     private void loadBuffer() {
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         Gson gson = new Gson();
-        String json = preferences.getString("bufferList", null);
-        Type type = new TypeToken<ArrayList<String>>() {}.getType();
-        mFileBuffer = gson.fromJson(json, type);
-
-        if (json == null){
-            mFileBuffer = new ArrayList<String>();
+        String buffer_json = preferences.getString("bufferList", null);
+        if (buffer_json != null) {
+            Type type = new TypeToken<ArrayList<String>>() {
+            }.getType();
+            mFileBuffer = gson.fromJson(buffer_json, type);
+            mFileBuffer = Collections.synchronizedList(mFileBuffer);
         }
+
+        String notkeep_json = preferences.getString("shouldnotbuffer", null);
+        if (notkeep_json != null) {
+            Type type = new TypeToken<ArrayList<String>>() {
+            }.getType();
+            mShouldNotKeepBuffer = gson.fromJson(notkeep_json, type);
+            for (int i = mShouldNotKeepBuffer.size()-1; i >= 0; --i){
+                RecordItem item = mShouldNotKeepBuffer.remove(i);
+                File file = new File(item.path);
+                file.delete();
+            }
+        }
+
         //check if every file in bufferlist exists
         for (int i = mFileBuffer.size()-1; i >= 0; --i){
             File f = new File(mFileBuffer.get(i));
@@ -216,7 +233,7 @@ public class DataManager {
     }
 
     //new recording added, clean old files
-    public void newRecordingAdded(String filename, String createdate, int duration) {
+    public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, int preceding_files) {
         RecordItem newitem = new RecordItem();
         newitem.path = filename;
         String[] tokens = filename.split("/");
@@ -224,9 +241,35 @@ public class DataManager {
         newitem.createDate = createdate;
         newitem.duration = duration;
         newitem.uploaded = false;
+        newitem.should_keep = shouldkeep;
 
-        mFolderFileList.add(0, newitem);
-        new insertAsyncTask(recordItemDAO).execute(newitem);
+        if (shouldkeep) {
+            if (preceding_files > 0){
+                int bfsize = mShouldNotKeepBuffer.size();
+                for (int i = bfsize-1; i >= Math.max(0, bfsize-preceding_files); --i){
+                    RecordItem item = mShouldNotKeepBuffer.remove(0);
+                    item.should_keep = true;
+                    mFolderFileList.add(0, newitem);
+                    new insertAsyncTask(recordItemDAO).execute(item);
+                    if (autoUpload){
+                        if (bufferSize == 0){
+                            uploadFile(item.path);
+                        } else {
+                            mFileBuffer.add(filename);
+                        }
+                    }
+                }
+            }
+            mFolderFileList.add(0, newitem);
+            new insertAsyncTask(recordItemDAO).execute(newitem);
+        } else {
+            mShouldNotKeepBuffer.add(newitem);
+            if (mShouldNotKeepBuffer.size() > 10) {
+                RecordItem item = mShouldNotKeepBuffer.remove(0);
+                File file = new File(item.path);
+                file.delete();
+            }
+        }
 
         deleteFilesOutOfMaxFiles();
         if (autoUpload) {
