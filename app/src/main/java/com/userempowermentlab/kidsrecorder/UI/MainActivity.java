@@ -293,7 +293,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (!record_background && recordingManager != null && recordingManager.isRecording()){
-            Log.d("[RAY]", "onStop: called!!!!!!!!!!");
+            Log.d("[Ray]", "onStop: !!!!!");
+            recordingManager.cancelNotification();
             stopRecording();
             stopRecordingUI();
         }
