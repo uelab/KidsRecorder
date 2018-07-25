@@ -149,6 +149,7 @@ public class RecordingManager extends Service {
         Log.d("[RAY]", "Recording start");
     }
 
+    //timelimit in seconds
     public void StartRecording(String filename, int timeLimit){
         recordingTime = timeLimit*1000;
         StartRecording(filename);
@@ -166,9 +167,18 @@ public class RecordingManager extends Service {
         sendBroadCast(RecordingStatus.RECORDING_STOPPED);
     }
 
+    private void _startRecording(){
+
+    }
+
+    private void _stopRecording(){
+
+    }
+
     public void PauseRecording() {
         if (recorder.isRecording()){
             recorder.Pause();
+            mHandler.removeCallbacks(mTimerStopRecorder);
         }
         sendBroadCast(RecordingStatus.RECORDING_PAUSED);
     }
@@ -176,6 +186,10 @@ public class RecordingManager extends Service {
     public void ResumeRecording() {
         if (recorder.isRecording()){
             recorder.Resume();
+            //we need to restart the timer as it is paused
+            if (recordingTime > 0){
+                mHandler.postDelayed(mTimerStopRecorder, recordingTime-1000*recorder.getDuration());
+            }
         }
         sendBroadCast(RecordingStatus.RECORDING_RESUMED);
     }

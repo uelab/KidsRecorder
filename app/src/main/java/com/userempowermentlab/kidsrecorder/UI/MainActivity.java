@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
 
     //recording settings
     private int record_length = 5;
-    private int buffer_size = 5;
     private boolean record_autorestart = false;
     private boolean record_background = false;
     private boolean record_keepawake = false;
