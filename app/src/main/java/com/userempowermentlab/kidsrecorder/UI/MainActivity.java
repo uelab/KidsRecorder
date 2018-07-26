@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver receiver;
     private boolean serviceBound = false;
     private boolean registeredReceiver = false;
+    private boolean isUIRecording = false;
 
     //recording settings
     private int record_length = 5;
@@ -67,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private String storage_fileprefix = "";
     private int storage_buffersize = 0;
     private int storage_limit = 0;
+    private boolean preceding_mode = false;
+    private int preceding_time = 0;
     Set<String> notifyEvents = null;
     Set<String> notifyStyles = null;
 
@@ -177,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         record_length = Integer.parseInt(tempstring);
         if (record_timing == false) record_length = 0;
         record_autorestart = sharedPreferences.getBoolean("record_autorestart", false);
-        
+
         record_background = sharedPreferences.getBoolean("record_background", false);
         record_keepawake = sharedPreferences.getBoolean("record_keepawake", false);
 
@@ -191,9 +194,20 @@ public class MainActivity extends AppCompatActivity {
         notifyEvents = sharedPreferences.getStringSet("indicator_event", null);
         notifyStyles = sharedPreferences.getStringSet("indicator_style", null);
 
+        tempstring = sharedPreferences.getString("preceding_time", "0");
+        preceding_time = Integer.parseInt(tempstring);
+        if (preceding_time > 0){
+            preceding_mode = true;
+        }
+
         dataManager.setBufferSize(storage_buffersize);
         dataManager.setMaxFilesBeforeDelete(storage_limit);
         dataManager.setAutoUpload(storage_autoupload);
+
+        if (recordingManager == null) return;
+        recordingManager.setAlwaysRunning(record_keepawake & record_background);
+        recordingManager.setShould_preced(preceding_mode);
+        recordingManager.setPrecedingTime(preceding_time);
     }
 
     private void setupUI() {
@@ -204,10 +218,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (recordingManager == null) return;
-                if (recordingManager.isRecording()){
+                if (isUIRecording){
                     stopRecording();
+                    isUIRecording = false;
+                    if (preceding_mode && preceding_time > 0){
+                        recordingManager.setShould_keep(false);
+                    }
                 } else {
+                    if (preceding_mode && preceding_time > 0){
+                        stopSilentRecording();
+                        recordingManager.setShould_keep(true);
+                    }
                     startRecording();
+                    isUIRecording = true;
                 }
             }
         });
@@ -219,16 +242,28 @@ public class MainActivity extends AppCompatActivity {
             recordingManager.StopRecording();
     }
 
+    void stopSilentRecording(){
+        if (recordingManager == null) return;
+        if (recordingManager.isRecording())
+            recordingManager.StopRecordingSilently();
+    }
+
     void stopRecordingUI() {
         mChronometer.stop();
         mRecordButton.setImageResource(R.drawable.ic_media_play);
+    }
+
+    void startSilentRecording(){
+        int time_limit = preceding_time;
+        recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), time_limit);
     }
 
     void startRecording(){
         if (recordingManager == null) return;
         updateRecordSettings();
         recordingManager.setAlwaysRunning(record_keepawake & record_background);
-        recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), record_length);
+        int time_limit = record_length;
+        recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), time_limit);
     }
 
     void startRecrodingUI() {
@@ -287,6 +322,15 @@ public class MainActivity extends AppCompatActivity {
             unregisterReceiver(receiver);
         }
         registeredReceiver = false;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateRecordSettings();
+        if (!record_background && recordingManager != null && preceding_time > 0 && preceding_mode ) {
+            recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTime(), preceding_time);
+        }
     }
 
     @Override

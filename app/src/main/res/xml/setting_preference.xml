@@ -18,6 +18,14 @@
             android:inputType="numberPassword"
             android:defaultValue="0" />
 
+        <android.support.v7.preference.EditTextPreference
+            android:key="preceding_time"
+            android:title="@string/settings_preceding_time"
+            android:summary="@string/settings_preceding_time_desc"
+            android:digits="0123456789"
+            android:inputType="numberPassword"
+            android:defaultValue="0" />
+
         <android.support.v7.preference.CheckBoxPreference
             android:key="record_autorestart"
             android:title="@string/settings_record_autorestart"
@@ -84,4 +92,6 @@
             android:entryValues="@array/style_list"/>
 
     </android.support.v7.preference.PreferenceCategory>
+
+
 </android.support.v7.preference.PreferenceScreen>

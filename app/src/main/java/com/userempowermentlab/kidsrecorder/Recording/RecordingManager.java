@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -31,7 +32,9 @@ public class RecordingManager extends Service {
     public static final String RECORDER_BROADCAST_ACTION = "com.userempowermentlab.kidsrecorder.Recording.ACTION";
     private int recordingTime = 0; // 0 for manually stop recording; > 0 for limited recording time in ms
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
-    private int preceding_files = 0; //enable preceding record (also record n preceding files before the real record start)
+
+    private boolean should_preced = false; // whether to record preceding or not
+    private int precedingTime = 0; //enable preceding time record , in ms
     private boolean should_keep = true; // if should_keep && auto_upload, the file would be upload, otherwise it won't
 
     private DataManager manager;
@@ -57,8 +60,13 @@ public class RecordingManager extends Service {
         this.alwaysRunning = alwaysRunning;
     }
 
-    public void setPreceding_files(int preceding_files) {
-        this.preceding_files = preceding_files;
+    public void setShould_preced(boolean should_preced) {
+        this.should_preced = should_preced;
+    }
+
+    public void setPrecedingTime(int precedingTime) {
+        should_preced = true;
+        this.precedingTime = precedingTime;
     }
 
     public void setShould_keep(boolean should_keep) {
@@ -86,8 +94,16 @@ public class RecordingManager extends Service {
         mTimerStopRecorder = new Runnable() {
             @Override
             public void run() {
-                sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
-                StopRecording();
+                //if preceding mode open and the recording is not triggered by outside
+                // then should auto restart the background recording
+                if (precedingTime > 0 && !should_keep){
+                    StopRecordingSilently();
+                    SystemClock.sleep(100);
+                    StartRecordingSilently(manager.getRecordingNameOfTime());
+                } else {
+                    sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
+                    StopRecording();
+                }
             }
         };
     }
@@ -150,13 +166,17 @@ public class RecordingManager extends Service {
     }
 
     public void StartRecording(String filename) {
-        sendBroadCast(RecordingStatus.RECORDING_STARTED);
+        Log.d("[RAY]", "Recording start");
+        should_keep = false;
+        if (recorder.isRecording()){
+            StopRecordingSilently();
+        }
         recorder.setFilePath(filename);
         recorder.Start();
         if (recordingTime > 0) {
-            mHandler.postDelayed(mTimerStopRecorder, recordingTime);
+            mHandler.postDelayed(mTimerStopRecorder, precedingTime);
         }
-        Log.d("[RAY]", "Recording start");
+        sendBroadCast(RecordingStatus.RECORDING_STARTED);
     }
 
     //timelimit in seconds
@@ -165,16 +185,44 @@ public class RecordingManager extends Service {
         StartRecording(filename);
     }
 
-    public void StopRecording() {
+    //silent version for preceding recording
+    public void StartRecordingSilently(String filename, int timeLimit){
+        precedingTime = timeLimit*1000;
+        StartRecordingSilently(filename);
+    }
+
+    public void StartRecordingSilently(String filename){
+        should_keep = false;
+        if (precedingTime <= 0) return;
+        Log.d("[RAY]", "Recording silent start");
+        if (recorder.isRecording()){
+            StopRecordingSilently();
+        }
+        recorder.setFilePath(filename);
+        recorder.Start();
+        mHandler.postDelayed(mTimerStopRecorder, precedingTime);
+    }
+
+    public void StopRecordingSilently(){
         Log.d("[RAY]", "Recording Stopped");
         mHandler.removeCallbacks(mTimerStopRecorder);
         if (recorder.isRecording()){
             recorder.Stop();
         }
         if (manager != null) {
-            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration(), should_keep, preceding_files);
+            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration(), should_keep, should_preced);
         }
-        sendBroadCast(RecordingStatus.RECORDING_STOPPED);
+    }
+
+    //add notification
+    public void StopRecording() {
+       StopRecordingSilently();
+       sendBroadCast(RecordingStatus.RECORDING_STOPPED);
+       //for preceding auto start
+       if (precedingTime > 0) {
+           SystemClock.sleep(100);
+           StartRecordingSilently(manager.getRecordingNameOfTime());
+       }
     }
 
     public void PauseRecording() {

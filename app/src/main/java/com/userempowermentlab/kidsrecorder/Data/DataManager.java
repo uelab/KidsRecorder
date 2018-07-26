@@ -233,7 +233,7 @@ public class DataManager {
     }
 
     //new recording added, clean old files
-    public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, int preceding_files) {
+    public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, boolean preceding_mode) {
         RecordItem newitem = new RecordItem();
         newitem.path = filename;
         String[] tokens = filename.split("/");
@@ -244,9 +244,10 @@ public class DataManager {
         newitem.should_keep = shouldkeep;
 
         if (shouldkeep) {
-            if (preceding_files > 0){
+            if (preceding_mode){
                 int bfsize = mShouldNotKeepBuffer.size();
-                for (int i = bfsize-1; i >= Math.max(0, bfsize-preceding_files); --i){
+                //we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
+                for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
                     RecordItem item = mShouldNotKeepBuffer.remove(0);
                     item.should_keep = true;
                     mFolderFileList.add(0, newitem);
@@ -264,7 +265,7 @@ public class DataManager {
             new insertAsyncTask(recordItemDAO).execute(newitem);
         } else {
             mShouldNotKeepBuffer.add(newitem);
-            if (mShouldNotKeepBuffer.size() > 10) {
+            if (mShouldNotKeepBuffer.size() > 3) {
                 RecordItem item = mShouldNotKeepBuffer.remove(0);
                 File file = new File(item.path);
                 file.delete();

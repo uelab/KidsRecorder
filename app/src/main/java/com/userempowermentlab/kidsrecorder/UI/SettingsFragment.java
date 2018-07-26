@@ -12,6 +12,7 @@ import com.userempowermentlab.kidsrecorder.R;
 
 public class SettingsFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
     EditTextPreference record_length;
+    EditTextPreference preceding_time;
     EditTextPreference storage_fileprefix;
     EditTextPreference storage_buffersize;
     EditTextPreference storage_limit;
@@ -27,6 +28,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
 
         record_length = (EditTextPreference) findPreference("record_length");
         record_length.setOnPreferenceChangeListener(this);
+
+        preceding_time = (EditTextPreference) findPreference("preceding_time");
+        preceding_time.setOnPreferenceChangeListener(this);
+
         storage_fileprefix = (EditTextPreference) findPreference("storage_fileprefix");
         storage_fileprefix.setOnPreferenceChangeListener(this);
         storage_buffersize = (EditTextPreference) findPreference("storage_buffersize");
@@ -37,7 +42,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference == record_length || preference == storage_buffersize || preference == storage_limit){
+        if (preference == record_length || preference == storage_buffersize || preference == storage_limit || preference == preceding_time){
             try{
                 int n = Integer.parseInt(newValue.toString());
                 if (n < 0) return false;

@@ -33,6 +33,9 @@
     <string name="settings_record_timing">Limit Recording Duration</string>
     <string name="settings_record_length">Set Recording Duration (in Sec)</string>
     <string name="settings_record_length_desc">The time limitation of one recording. Only valid when Duration Limitation is enabled.</string>
+    <string name="settings_preceding_time">Set recording preceding time (in Sec)</string>
+    <string name="settings_preceding_time_desc">The preceding time before a recording. Only valid when greater than 0 (better greater than 10 sec).</string>
+
     <string name="settings_record_autorestart">Auto Restart Recording After Stopped</string>
     <string name="settings_record_background">Record in Background</string>
     <string name="settings_record_background_desc">Record in Background</string>
