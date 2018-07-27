@@ -46,13 +46,14 @@ public class DataUploader {
             public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
                 float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
                 int percentDone = (int)percentDonef;
-
+//
 //                Log.d("YourActivity", "ID:" + id + " bytesCurrent: " + bytesCurrent
 //                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
             }
 
             @Override
             public void onError(int id, Exception ex) {
+                ex.printStackTrace();
                 // Handle errors
                 DataManager manager = DataManager.getInstance();
                 manager.OnUploadError(filename);

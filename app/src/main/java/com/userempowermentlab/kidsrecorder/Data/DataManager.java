@@ -157,9 +157,6 @@ public class DataManager {
         String filename;
         synchronized (mFileBuffer) {
             final String fname = mFileBuffer.remove(0);
-            synchronized (mFileUploading) {
-                mFileUploading.add(fname);
-            }
             filename = fname;
         }
         Log.d("[RAY]", "now uploading ... "+filename);
@@ -170,6 +167,11 @@ public class DataManager {
     //uploading
     public void uploadFile(String fname) {
         if (!Helper.CheckNetworkConnected(context) || mFileUploading.contains(fname)) return;
+        if (bufferSize > 0){
+            synchronized (mFileUploading) {
+                mFileUploading.add(fname);
+            }
+        }
         String[] tokens = fname.split("/");
         DataUploader.AmazonAWSUploader(context, fname, "public/"+tokens[tokens.length-1]);
     }
