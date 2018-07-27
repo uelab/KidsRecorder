@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (checkAndRequestPermissions()) {
+            Log.d("[RAY]", "start service");
             StartService();
         }
 
@@ -218,6 +219,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (recordingManager == null) return;
+
                 if (isUIRecording){
                     stopRecording();
                     isUIRecording = false;
@@ -337,9 +339,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (!record_background && recordingManager != null && recordingManager.isRecording()){
+            isUIRecording = false;
             Log.d("[Ray]", "onStop: !!!!!");
             recordingManager.cancelNotification();
-            stopRecording();
+            if (recordingManager != null && recordingManager.isRecording())
+                recordingManager.StopRecordingWithoutStartingBackground();
             stopRecordingUI();
         }
     }

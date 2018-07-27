@@ -67,7 +67,8 @@ public class DataManager {
                 for (int i = mFolderFileList.size()-1; i >= 0; --i){
                     RecordItem item = mFolderFileList.get(i);
                     final File record = new File(item.path);
-                    if (!record.exists()) {
+                    if (!record.exists() || !item.should_keep) {
+                        Log.d("[RAY]", "delete file, should keep "+item.should_keep);
                         mFolderFileList.remove(i);
                         new deleteAsyncTask(recordItemDAO).execute(item);
                     }
@@ -128,8 +129,6 @@ public class DataManager {
         Gson gson = new Gson();
         String buffer_json = gson.toJson(mFileBuffer);
         editor.putString("bufferList", buffer_json);
-        String notkeep_json = gson.toJson(mShouldNotKeepBuffer);
-        editor.putString("shouldnotbuffer", notkeep_json);
         editor.apply();
     }
 
@@ -142,18 +141,7 @@ public class DataManager {
             }.getType();
             mFileBuffer = gson.fromJson(buffer_json, type);
             mFileBuffer = Collections.synchronizedList(mFileBuffer);
-        }
-
-        String notkeep_json = preferences.getString("shouldnotbuffer", null);
-        if (notkeep_json != null) {
-            Type type = new TypeToken<ArrayList<String>>() {
-            }.getType();
-            mShouldNotKeepBuffer = gson.fromJson(notkeep_json, type);
-            for (int i = mShouldNotKeepBuffer.size()-1; i >= 0; --i){
-                RecordItem item = mShouldNotKeepBuffer.remove(i);
-                File file = new File(item.path);
-                file.delete();
-            }
+            Log.d("[RAY]", "loaded Buffer!");
         }
 
         //check if every file in bufferlist exists
@@ -174,6 +162,7 @@ public class DataManager {
             }
             filename = fname;
         }
+        Log.d("[RAY]", "now uploading ... "+filename);
         //upload fname
         uploadFile(filename);
     }
@@ -187,6 +176,7 @@ public class DataManager {
 
     //when uploading finished, upload the next buffer if buffersize is enough
     public void OnUploadFinished(String filename) {
+        Log.d("[RAY]", "OnUploadFinished + " + filename);
         if (bufferSize > 0) {
             synchronized (mFileUploading) {
                 mFileUploading.remove(filename);
@@ -250,13 +240,15 @@ public class DataManager {
                 for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
                     RecordItem item = mShouldNotKeepBuffer.remove(0);
                     item.should_keep = true;
-                    mFolderFileList.add(0, newitem);
-                    new insertAsyncTask(recordItemDAO).execute(item);
+                    mFolderFileList.add(0, item);
+                    new updateAsyncTask(recordItemDAO).execute(item);
                     if (autoUpload){
                         if (bufferSize == 0){
                             uploadFile(item.path);
                         } else {
-                            mFileBuffer.add(filename);
+                            synchronized (mFileBuffer) {
+                                mFileBuffer.add(item.path);
+                            }
                         }
                     }
                 }
@@ -265,8 +257,11 @@ public class DataManager {
             new insertAsyncTask(recordItemDAO).execute(newitem);
         } else {
             mShouldNotKeepBuffer.add(newitem);
+            new insertAsyncTask(recordItemDAO).execute(newitem);
+
             if (mShouldNotKeepBuffer.size() > 3) {
                 RecordItem item = mShouldNotKeepBuffer.remove(0);
+                new deleteAsyncTask(recordItemDAO).execute(item);
                 File file = new File(item.path);
                 file.delete();
             }
@@ -275,12 +270,16 @@ public class DataManager {
         deleteFilesOutOfMaxFiles();
         if (autoUpload) {
             //if no buffer, upload new files
-            if (bufferSize == 0) {
+            if (bufferSize == 0 && shouldkeep) {
                 //upload
                 uploadFile(filename);
             } else {
-                mFileBuffer.add(filename);
-                storeBuffer();
+                if (shouldkeep) {
+                    synchronized (mFileBuffer) {
+                        mFileBuffer.add(filename);
+                        storeBuffer();
+                    }
+                }
                 if (mFileBuffer.size() > bufferSize)
                     uploadBuffer();
             }

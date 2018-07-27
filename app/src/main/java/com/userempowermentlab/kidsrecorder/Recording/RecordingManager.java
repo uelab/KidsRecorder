@@ -66,7 +66,7 @@ public class RecordingManager extends Service {
 
     public void setPrecedingTime(int precedingTime) {
         should_preced = true;
-        this.precedingTime = precedingTime;
+        this.precedingTime = precedingTime * 1000;
     }
 
     public void setShould_keep(boolean should_keep) {
@@ -99,7 +99,7 @@ public class RecordingManager extends Service {
                 if (precedingTime > 0 && !should_keep){
                     StopRecordingSilently();
                     SystemClock.sleep(100);
-                    StartRecordingSilently(manager.getRecordingNameOfTime());
+                    StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
                 } else {
                     sendBroadCast(RecordingStatus.RECORDING_TIME_UP);
                     StopRecording();
@@ -166,15 +166,15 @@ public class RecordingManager extends Service {
     }
 
     public void StartRecording(String filename) {
-        Log.d("[RAY]", "Recording start");
-        should_keep = false;
+        Log.d("[RAY]", "Recording start + " + filename);
         if (recorder.isRecording()){
             StopRecordingSilently();
         }
+        should_keep = true;
         recorder.setFilePath(filename);
         recorder.Start();
         if (recordingTime > 0) {
-            mHandler.postDelayed(mTimerStopRecorder, precedingTime);
+            mHandler.postDelayed(mTimerStopRecorder, recordingTime);
         }
         sendBroadCast(RecordingStatus.RECORDING_STARTED);
     }
@@ -192,19 +192,19 @@ public class RecordingManager extends Service {
     }
 
     public void StartRecordingSilently(String filename){
-        should_keep = false;
-        if (precedingTime <= 0) return;
-        Log.d("[RAY]", "Recording silent start");
         if (recorder.isRecording()){
             StopRecordingSilently();
         }
+        if (precedingTime <= 0) return;
+        Log.d("[RAY]", "Recording silent start");
+        should_keep = false;
         recorder.setFilePath(filename);
         recorder.Start();
         mHandler.postDelayed(mTimerStopRecorder, precedingTime);
     }
 
     public void StopRecordingSilently(){
-        Log.d("[RAY]", "Recording Stopped");
+        Log.d("[RAY]", "Recording Stopped, should_KEEP "+ should_keep);
         mHandler.removeCallbacks(mTimerStopRecorder);
         if (recorder.isRecording()){
             recorder.Stop();
@@ -216,13 +216,21 @@ public class RecordingManager extends Service {
 
     //add notification
     public void StopRecording() {
-       StopRecordingSilently();
+        Log.d("[RAY]", "preceding time : "+ precedingTime);
+
+        StopRecordingSilently();
        sendBroadCast(RecordingStatus.RECORDING_STOPPED);
        //for preceding auto start
        if (precedingTime > 0) {
            SystemClock.sleep(100);
-           StartRecordingSilently(manager.getRecordingNameOfTime());
+           Log.d("[RAY]", "StopRecording: autostart");
+           StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
        }
+    }
+
+    public void StopRecordingWithoutStartingBackground() {
+        StopRecordingSilently();
+        sendBroadCast(RecordingStatus.RECORDING_STOPPED);
     }
 
     public void PauseRecording() {
