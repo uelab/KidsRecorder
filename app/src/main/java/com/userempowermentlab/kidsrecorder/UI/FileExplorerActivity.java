@@ -40,7 +40,7 @@ public class FileExplorerActivity extends AppCompatActivity implements FileVIewM
         // Enable the Up button
         ab.setDisplayHomeAsUpEnabled(true);
 
-        RecyclerView mRecyclerView = (RecyclerView)findViewById(R.id.recyclerView);
+        mRecyclerView = (RecyclerView)findViewById(R.id.recyclerView);
         mRecyclerView.setHasFixedSize(true);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         llm.setOrientation(LinearLayoutManager.VERTICAL);

@@ -363,8 +363,7 @@ public class MainActivity extends AppCompatActivity {
             isUIRecording = false;
             Log.d("[Ray]", "onStop: !!!!!");
             recordingManager.cancelNotification();
-            if (recordingManager != null && recordingManager.isRecording())
-                recordingManager.StopRecordingWithoutStartingBackground();
+            recordingManager.StopRecordingWithoutStartingBackground();
             stopRecordingUI();
         }
     }
