@@ -12,7 +12,6 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -21,20 +20,23 @@ import android.widget.Toast;
 import com.userempowermentlab.kidsrecorder.Data.DataManager;
 import com.userempowermentlab.kidsrecorder.Data.RecordItem;
 import com.userempowermentlab.kidsrecorder.Listener.FileVIewMultiselectedListener;
-import com.userempowermentlab.kidsrecorder.UI.FileExplorerActivity;
 import com.userempowermentlab.kidsrecorder.UI.PlaybackFragment;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * FileExplorer Adapter class, manage between local file information and the UI class
+ * Code reference from SoundRecorder: https://github.com/dkim0419/SoundRecorder
+ */
 public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.RecordingsViewHolder>  {
     Context mContext;
     FileVIewMultiselectedListener mlistener = null;
     RecordItem item;
     DataManager dataManager;
     boolean multiSelectionEnabled = false;
-    ArrayList<RecordItem> selectedRecords = new ArrayList<RecordItem>();
+    ArrayList<RecordItem> selectedRecords = new ArrayList<RecordItem>(); //the list storaging the current multi-selected files
 
     public FileViewAdapter(Context context) {
         super();
@@ -46,6 +48,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         mlistener = listener;
     }
 
+    /**
+     * The class of the viewholder
+     */
     public static class RecordingsViewHolder extends RecyclerView.ViewHolder {
         protected TextView vName;
         protected TextView vLength;
@@ -77,10 +82,11 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
 
     @Override
     public void onBindViewHolder(final RecordingsViewHolder holder, int position) {
-
+        //get the corresponding item at the location
         item = dataManager.getItemAtPos(position);
         int itemDuration = item.duration;
 
+        //display related information
         long minutes = TimeUnit.SECONDS.toMinutes(itemDuration);
         long seconds = TimeUnit.SECONDS.toSeconds(itemDuration)
                 - TimeUnit.MINUTES.toSeconds(minutes);
@@ -94,6 +100,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
             holder.vUploaded.setVisibility(View.VISIBLE);
         }
 
+        //check whether the file is multiselected
         if (multiSelectionEnabled && selectedRecords.contains(item)){
             holder.cardView.setBackgroundResource(R.color.selectGray);
         } else {
@@ -127,6 +134,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
             }
         });
 
+        //enable multiselect mode when long press
         holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -149,6 +157,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         });
     }
 
+    /**
+     * In multi-select mode, select the item in certain position
+     */
     private boolean selectItemAtPosition(int position) {
         if (selectedRecords.contains(dataManager.getItemAtPos(position))){
             selectedRecords.remove(dataManager.getItemAtPos(position));
@@ -165,6 +176,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         }
     }
 
+    /**
+     * Deselect all selections and quit multi-select mode
+     */
     public void deSelectAll() {
         selectedRecords.clear();
         multiSelectionEnabled = false;
@@ -184,6 +198,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         return dataManager.getItemCout();
     }
 
+    //UI & interaction stuff
     public void ShowDeleteFileDialog () {
         // File delete confirm
         AlertDialog.Builder confirmDelete = new AlertDialog.Builder(mContext);
@@ -213,6 +228,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         alert.show();
     }
 
+    /**
+     * upload selected files
+     */
     public void UploadSelectedFiles() {
         if (selectedRecords.size() > 0) {
             for (RecordItem item : selectedRecords){
@@ -225,6 +243,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         notifyDataSetChanged();
     }
 
+    /**
+     * delete selected files
+     */
     private void removeSelectedFiles() {
         //remove item from db, recyclerview and storage
         if (selectedRecords.size() > 0) {
@@ -244,6 +265,9 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
         notifyDataSetChanged();
     }
 
+    /**
+     * Share selected files
+     */
     public void ShowShareFileDialog() {
         if (selectedRecords.size() == 0) return;
         Intent intent = new Intent();

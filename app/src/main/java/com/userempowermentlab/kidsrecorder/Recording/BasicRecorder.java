@@ -23,6 +23,8 @@ import omrecorder.PullableSource;
 import omrecorder.Recorder;
 
 /**
+ * Basic recording class
+ * The format is wav
  * Created by mingrui on 7/16/2018.
  */
 

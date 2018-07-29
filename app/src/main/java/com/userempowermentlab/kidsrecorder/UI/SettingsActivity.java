@@ -7,6 +7,9 @@ import android.os.Bundle;
 
 import com.userempowermentlab.kidsrecorder.R;
 
+/**
+ * SettingsActivity for preference setting
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     @Override

@@ -10,6 +10,10 @@ import android.view.View;
 
 import com.userempowermentlab.kidsrecorder.R;
 
+/**
+ * Fragment UI class for preference setting
+ */
+
 public class SettingsFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
     EditTextPreference record_length;
     EditTextPreference preceding_time;
@@ -40,8 +44,12 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
         storage_limit.setOnPreferenceChangeListener(this);
     }
 
+    /**
+     * Here we add some checkes for certain options
+     */
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+        //input values (should be positive number)
         if (preference == record_length || preference == storage_buffersize || preference == storage_limit || preference == preceding_time){
             try{
                 int n = Integer.parseInt(newValue.toString());
@@ -49,7 +57,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Prefer
             } catch (Exception e){
                 return false;
             }
-        } else if (preference == storage_fileprefix){
+        }
+        //input values should be a legal file prefix
+        else if (preference == storage_fileprefix){
             String name = newValue.toString();
             name = name.replaceAll("\\W+", "");
             PreferenceManager.getDefaultSharedPreferences(getActivity()).edit().putString("storage_fileprefix", name).commit();

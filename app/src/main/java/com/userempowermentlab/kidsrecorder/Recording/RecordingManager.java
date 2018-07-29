@@ -25,6 +25,13 @@ import com.userempowermentlab.kidsrecorder.UI.MainActivity;
 import static android.content.ContentValues.TAG;
 
 /**
+ * This class is the high lever recorder manager
+ * The manager is a service, which could also run in background
+ *
+ * Functions: start/stop/resume/pause recording, preceding mode for recording
+ * Connected to the datamanager, after the recording finished, it will pass the file information to the datamanager
+ *
+ * To use the manager, please first start the service, then bind the service
  * Created by mingrui on 7/16/2018.
  */
 
@@ -38,16 +45,16 @@ public class RecordingManager extends Service {
     private boolean should_keep = true; // if should_keep && auto_upload, the file would be upload, otherwise it won't
 
     private DataManager manager;
-    private Handler mHandler = new Handler();
-    Runnable mTimerStopRecorder;
+    private Handler mHandler = new Handler(); //for timer
+    Runnable mTimerStopRecorder; // for timer
     private BasicRecorder recorder = null;
-    PowerManager.WakeLock wakeLock;
+    PowerManager.WakeLock wakeLock;// for always recording mode, the phone cpu won't sleep even in black screen. Drain power quickly
     private final IBinder mBinder = new LocalBinder();
 
-    public int getRecordingTime() {
-        return recordingTime;
-    }
-
+    /**
+     * set always awake mode (even user lock screen)
+     * @param alwaysRunning whether the recording service should keep phone awake
+     */
     public void setAlwaysRunning(boolean alwaysRunning) {
         if (alwaysRunning){
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
@@ -60,19 +67,36 @@ public class RecordingManager extends Service {
         this.alwaysRunning = alwaysRunning;
     }
 
+    /**
+     * whether the recorder should record preceding clips before the formal recodring start
+     */
     public void setShould_preced(boolean should_preced) {
         this.should_preced = should_preced;
     }
 
+    /**
+     * Set time for preceding clips before the formal recording start.
+     * @param precedingTime how long will be recorded before the formal recording is triggered (in second)
+     */
     public void setPrecedingTime(int precedingTime) {
         should_preced = true;
         this.precedingTime = precedingTime * 1000;
     }
 
+    /**
+     * Whether the current recording file should be kept
+     * If kept, the file would be shown in the file explorer and be uploaded (if the auto upload is on)
+     * Otherwise, it would be deleted automatically.
+     * Should_keep is useful when preceding mode is on. To get preceding recording, the recorder would always record *background* clips
+     * Thus many background would not be kept, only the ones before the triggered recording could be kept.
+     */
     public void setShould_keep(boolean should_keep) {
         this.should_keep = should_keep;
     }
 
+    /**
+     * Returns the recording time (after stop or paused)
+     */
     public int getRecordedTime() {
         if (recorder != null && recorder.isRecording()) {
             return recorder.getRecordedTime();
@@ -80,6 +104,9 @@ public class RecordingManager extends Service {
         else return 0;
     }
 
+    /**
+     * Returns whether recording
+     */
     public boolean isRecording(){
 
         if (recorder != null) {
@@ -91,6 +118,8 @@ public class RecordingManager extends Service {
     public void onCreate() {
         super.onCreate();
         recorder = new BasicRecorder();
+
+        //the task for timed recording
         mTimerStopRecorder = new Runnable() {
             @Override
             public void run() {
@@ -136,6 +165,9 @@ public class RecordingManager extends Service {
         }
     }
 
+    /**
+     * Create notification of the recording status on status bar
+     */
     public void createNotification() {
         NotificationManager mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createChannel(mNotifyManager);
@@ -150,6 +182,9 @@ public class RecordingManager extends Service {
         mNotifyManager.notify(0, buildier.build());
     }
 
+    /**
+     * Cancel notification bar
+     */
     public void cancelNotification() {
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(0);
@@ -165,6 +200,11 @@ public class RecordingManager extends Service {
         notificationManager.createNotificationChannel(mChannel);
     }
 
+    /**
+     * Start recording. If this function is called, the "start notification" would broadcast to other classes
+     * should be used by other classes if it's formal (not preceding mode) recording
+     * @param filename the filename(full path) to be saved
+     */
     public void StartRecording(String filename) {
         Log.d("[RAY]", "Recording start + " + filename);
         if (recorder.isRecording()){
@@ -179,18 +219,35 @@ public class RecordingManager extends Service {
         sendBroadCast(RecordingStatus.RECORDING_STARTED);
     }
 
-    //timelimit in seconds
+    /**
+     * Start recording. If this function is called, the "start notification" would broadcast to other classes
+     * should be used by other classes if it's formal (not preceding mode) recording
+     * @param filename the filename(full path) to be saved
+     * @param timeLimit the recording time (in second)
+     */
     public void StartRecording(String filename, int timeLimit){
         recordingTime = timeLimit*1000;
         StartRecording(filename);
     }
 
-    //silent version for preceding recording
+    /**
+     * Start recording. If this function is called, there would be no broadcast
+     * should be used by the manager itself for always-on background recordings in preceding mode
+     * Or by other classes to start background preceding mode recording
+     * @param filename the filename(full path) to be saved
+     * @param timeLimit the preceding time (in second)
+     */
     public void StartRecordingSilently(String filename, int timeLimit){
         precedingTime = timeLimit*1000;
         StartRecordingSilently(filename);
     }
 
+    /**
+     * Start recording. If this function is called, there would be no broadcast
+     * should be used by the manager itself for always-on background recordings in preceding mode
+     * Or by other classes to start background preceding mode recording
+     * @param filename the filename(full path) to be saved
+     */
     public void StartRecordingSilently(String filename){
         if (recorder.isRecording()){
             StopRecordingSilently();
@@ -203,6 +260,11 @@ public class RecordingManager extends Service {
         mHandler.postDelayed(mTimerStopRecorder, precedingTime);
     }
 
+    /**
+     * Stop recording. If this function is called, there would be no broadcast
+     * should be used by the manager itself for always-on background recordings in preceding mode
+     * Or by other classes to stop background preceding mode recording
+     */
     public void StopRecordingSilently(){
         Log.d("[RAY]", "Recording Stopped, should_KEEP "+ should_keep);
         mHandler.removeCallbacks(mTimerStopRecorder);
@@ -214,25 +276,37 @@ public class RecordingManager extends Service {
         }
     }
 
-    //add notification
+    /**
+     * Stop recording. If this function is called, the "stop notification" would broadcast to other classes
+     * should be used by other classes if it's formal (not preceding mode) recording
+     */
     public void StopRecording() {
         Log.d("[RAY]", "preceding time : "+ precedingTime);
 
         StopRecordingSilently();
-       sendBroadCast(RecordingStatus.RECORDING_STOPPED);
-       //for preceding auto start
-       if (precedingTime > 0) {
+        sendBroadCast(RecordingStatus.RECORDING_STOPPED);
+
+        //for preceding mode on, then auto start the background recording
+        if (precedingTime > 0) {
            SystemClock.sleep(100);
            Log.d("[RAY]", "StopRecording: autostart");
            StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
-       }
+        }
     }
 
+    /**
+     * Stop recording. If this function is called, the "stop notification" would broadcast to other classes
+     * should be used by other classes if it's formal (not preceding mode) recording when preceding mode is on
+     * This method would also stop preceding background recording
+     */
     public void StopRecordingWithoutStartingBackground() {
         StopRecordingSilently();
         sendBroadCast(RecordingStatus.RECORDING_STOPPED);
     }
 
+    /**
+     * Pause recording. If this function is called, the "pause notification" would broadcast to other classes
+     */
     public void PauseRecording() {
         if (recorder.isRecording()){
             recorder.Pause();
@@ -241,6 +315,9 @@ public class RecordingManager extends Service {
         sendBroadCast(RecordingStatus.RECORDING_PAUSED);
     }
 
+    /**
+     * Resume recording. If this function is called, the "resume notification" would broadcast to other classes
+     */
     public void ResumeRecording() {
         if (recorder.isRecording()){
             recorder.Resume();
@@ -252,6 +329,10 @@ public class RecordingManager extends Service {
         sendBroadCast(RecordingStatus.RECORDING_RESUMED);
     }
 
+
+    /**
+     * Send broadcast to other classes when the recorder status changed
+     */
     private void sendBroadCast(RecordingStatus status) {
         Intent broadCastIntent = new Intent();
         broadCastIntent.setAction(RECORDER_BROADCAST_ACTION);

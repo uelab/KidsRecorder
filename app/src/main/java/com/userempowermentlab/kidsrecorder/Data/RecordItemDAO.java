@@ -8,6 +8,9 @@ import android.arch.persistence.room.Update;
 
 import java.util.List;
 
+/**
+ * The database Room Data Access Objects
+ */
 @Dao
 public interface RecordItemDAO {
 

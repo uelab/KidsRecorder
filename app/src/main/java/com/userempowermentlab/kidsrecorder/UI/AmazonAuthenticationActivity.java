@@ -8,6 +8,12 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.AWSStartupHandler;
 import com.amazonaws.mobile.client.AWSStartupResult;
 
+/**
+ * The authentication activity class
+ * It creates the log-in activity. (IF WANT USER TO LOG IN FIRST TO USE THE APP, PLEASE MAKE IT THE STARTING ACTIVITY OF THE APPLICATION)
+ * Code provided by Amazon https://docs.aws.amazon.com/aws-mobile/latest/developerguide/add-aws-mobile-user-sign-in.html
+ * Created by mingrui on 7/16/2018.
+ */
 public class AmazonAuthenticationActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {

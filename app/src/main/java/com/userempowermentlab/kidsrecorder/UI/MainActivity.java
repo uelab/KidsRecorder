@@ -50,17 +50,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Main activity for recorder
+ * Also demonstrate how to use the recorder and save/upload file according to different settings
+ */
 public class MainActivity extends AppCompatActivity {
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     private RecordingManager recordingManager = null;
     private DataManager dataManager;
-    private BroadcastReceiver receiver;
+    private BroadcastReceiver receiver; //receive the recording status change notifications
     private boolean serviceBound = false;
     private boolean registeredReceiver = false;
-    private boolean isUIRecording = false;
+    private boolean isUIRecording = false; //whether the reocording button is pressed
 
     //recording settings
-    private int record_length = 5;
+    private int record_length; // the recording time in seconds
     private boolean record_background = false;
     private boolean record_keepawake = false;
     private boolean record_autorestart = false;
@@ -73,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     Set<String> notifyEvents = null;
     Set<String> notifyStyles = null;
 
-    SharedPreferences sharedPreferences;
+    SharedPreferences sharedPreferences; //The preferences stores the setting parameters from the setting UI
     Context context;
     IntentFilter filter;
 
@@ -89,23 +93,26 @@ public class MainActivity extends AppCompatActivity {
 
         setupUI();
         context = this;
+        //initialize necessary classes
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        //The procedure to instantiate the datamanager
+        //first call getInstance, then setfoldername, then call Initialize
         dataManager = DataManager.getInstance();
-        dataManager.setMaxFilesBeforeDelete(15);
         try {
             dataManager.setFolderName("KidsRecorder");
-//            dataManager.setBufferSize(3);
             dataManager.Initialize(context);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        //check for necessary permissions
         if (checkAndRequestPermissions()) {
-            Log.d("[RAY]", "start service");
             StartService();
         }
 
+        //get recorder status notifications and process thems
         filter = new IntentFilter();
         filter.addAction(RecordingManager.RECORDER_BROADCAST_ACTION);
         receiver = new BroadcastReceiver() {
@@ -118,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                         //the recording start, not because the user pressed the button
                         startRecrodingUI();
                         if (notifyEvents != null && notifyEvents.contains(getResources().getString(R.string.start))) {
+                            //indicate the status in UI
                             makeIndicator(getResources().getString(R.string.start));
                         }
                         break;
@@ -149,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    //Menu UI setup
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -175,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    //retrieve the settings from the settingUI and set them to record manager and data manager
     private void updateRecordSettings(){
         boolean record_timing = sharedPreferences.getBoolean("record_timing", false);
         String tempstring = sharedPreferences.getString("record_length", "0");
@@ -228,9 +238,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     if (preceding_mode && preceding_time > 0){
+                        //if the preceding mode is on, then we should first stop the background recording
                         stopSilentRecording();
                         recordingManager.setShould_keep(true);
                     }
+                    //then start the formal recording
                     startRecording();
                     isUIRecording = true;
                 }
@@ -244,20 +256,19 @@ public class MainActivity extends AppCompatActivity {
             recordingManager.StopRecording();
     }
 
+    //stop recording silently without getting broadcast (as the UI would be changed if there's broadcast)
     void stopSilentRecording(){
         if (recordingManager == null) return;
         if (recordingManager.isRecording())
             recordingManager.StopRecordingSilently();
     }
 
+    /**
+     * Stop recording UI (button appearance and the chronometer)
+     */
     void stopRecordingUI() {
         mChronometer.stop();
         mRecordButton.setImageResource(R.drawable.ic_media_play);
-    }
-
-    void startSilentRecording(){
-        int time_limit = preceding_time;
-        recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), time_limit);
     }
 
     void startRecording(){
@@ -268,12 +279,18 @@ public class MainActivity extends AppCompatActivity {
         recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), time_limit);
     }
 
+    /**
+     * Start recording UI (button appearance and the chronometer)
+     */
     void startRecrodingUI() {
         mChronometer.setBase(SystemClock.elapsedRealtime());
         mChronometer.start();
         mRecordButton.setImageResource(R.drawable.ic_media_stop);
     }
 
+    /**
+     * Show different indicator (vibrate/notification/sould/toast) according to setting
+     */
     void makeIndicator(String event) {
         if (notifyStyles == null) return;
         if (notifyStyles.contains(getResources().getString(R.string.vibration))) {
@@ -330,14 +347,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         updateRecordSettings();
+        //if the preceding mode is on, and the background mode is off, then should start preceding recording silently
         if (!record_background && recordingManager != null && preceding_time > 0 && preceding_mode ) {
             recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTime(), preceding_time);
         }
     }
 
+    /**
+     * When the activity disappear (when the application enters background)
+     */
     @Override
     protected void onStop() {
         super.onStop();
+        //if the background recording is off, then stop current recording
         if (!record_background && recordingManager != null && recordingManager.isRecording()){
             isUIRecording = false;
             Log.d("[Ray]", "onStop: !!!!!");

@@ -5,6 +5,9 @@ import android.arch.persistence.room.Room;
 import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
+/**
+ * The RoomDatabase of the recordings
+ */
 @Database(entities = {RecordItem.class}, version = 1)
 public abstract class RecordItemRoomDatabase extends RoomDatabase {
     public abstract RecordItemDAO recordItemDAO();

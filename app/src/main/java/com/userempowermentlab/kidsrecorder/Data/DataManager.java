@@ -22,26 +22,28 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * A singleton class for managing local recorded data
+ * Function: save/delete recording, provide time naming of the file
+ *           Manage uploading, Buffer upload files, Manager preceding files
  * Created by mingrui on 7/16/2018.
  */
 
-//a singleton class for managing local resources
 public class DataManager {
     private static final DataManager instance = new DataManager();
 
-    private boolean autoUpload = false;
+    private boolean autoUpload = false; // whether the recording should be auto uploaded or manually uploaded
     private int bufferSize = 0; // buffer file or not; if buffered, the file will be delayed to upload after the buffer size is reached
     private int maxFilesBeforeDelete = 0; // 0 - never delete; > 0 - delete the old files if more than the number of recording exists
     private String folderName = null; // the folder name of the recorded files
 
     //file list arrays
-    private ArrayList<RecordItem> mFolderFileList;
+    private ArrayList<RecordItem> mFolderFileList; //mFolderFileList stores all recording files in the folder
     //we need the lists to be thread-safe
-    private List<String> mFileUploading = Collections.synchronizedList(new ArrayList<String>());
-    private List<String> mFileBuffer = Collections.synchronizedList(new ArrayList<String>());
+    private List<String> mFileUploading = Collections.synchronizedList(new ArrayList<String>()); // the uploading file list
+    private List<String> mFileBuffer = Collections.synchronizedList(new ArrayList<String>()); // the uploading buffer
 
     //if the clip is not keeped, we store them in this buffer
-    private List<RecordItem> mShouldNotKeepBuffer = new ArrayList<RecordItem>();
+    private List<RecordItem> mShouldNotKeepBuffer = new ArrayList<RecordItem>(); //Only useful in preceding mode
 
     //permanent storage. DB is for file information, Preferences is for uploading buffer
     private RecordItemDAO recordItemDAO;
@@ -50,7 +52,12 @@ public class DataManager {
 
     private Handler mHandler = new Handler();
 
-    //call the Initialize at first after set the folder name
+    /**
+     * When the manager is instantiated for the first time
+     * call the Initialize at first after set the folder name
+     * The function initializes the database and retrieves the recording lists in the database
+     * Also load the file buffer
+     */
     public void Initialize(Context context) {
         this.context = context;
 
@@ -80,17 +87,34 @@ public class DataManager {
 
     //singleton
     private DataManager(){}
+
+    /**
+     * Get the instance of the manager. It is singleton class, thus there would only be one instance of the class through the whole application
+     * Use this function to retrieve the manager
+     */
     public static DataManager getInstance(){ return instance; }
 
     //setters
+
+    /**
+     * How many files should be kept in the local storage
+     * @param maxFilesBeforeDelete the amount of local recording files should be kept
+     */
     public void setMaxFilesBeforeDelete(int maxFilesBeforeDelete) {
         this.maxFilesBeforeDelete = maxFilesBeforeDelete;
     }
 
+    /**
+     * Whether the recordings should be uploaded automatically
+     */
     public void setAutoUpload(boolean autoUpload) {
         this.autoUpload = autoUpload;
     }
 
+    /**
+     * Set the folder name where the recording clips should be stored
+     * @param folderName
+     */
     public void setFolderName(String folderName) throws IOException{
         this.folderName = Environment.getExternalStorageDirectory() +
                 File.separator + folderName;
@@ -105,11 +129,20 @@ public class DataManager {
         }
     }
 
+    /**
+     * Set the buffer size of the uploading function. The buffer would only be effective when auto-upload is enabled
+     * @param bufferSize how large (how many files would be stored before uploading) of the buffer
+     */
     public void setBufferSize(int bufferSize) {
         this.bufferSize = bufferSize;
     }
 
     //getters
+
+    /**
+     * Get the recording item at position of the mFolderFileList
+     * @param pos
+     */
     public RecordItem getItemAtPos(int pos) {
         if (mFolderFileList.size() > pos && pos >= 0){
             return mFolderFileList.get(pos);
@@ -117,11 +150,18 @@ public class DataManager {
         return null;
     }
 
+    /**
+     * Get how many recording items in mFolderFileList (in the local storage folder)
+     */
     public int getItemCout() {
         return mFolderFileList.size();
     }
 
     //buffer
+
+    /**
+     * Store the buffer information in permanent storage
+     */
     public void storeBuffer() {
 
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -132,6 +172,9 @@ public class DataManager {
         editor.apply();
     }
 
+    /**
+     * Load the buffer information from permanent storage
+     */
     private void loadBuffer() {
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         Gson gson = new Gson();
@@ -152,6 +195,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * The buffer is full. Upload the first file in the buffer
+     */
     private void uploadBuffer() {
         if (!autoUpload || !Helper.CheckNetworkConnected(context)) return;
         String filename;
@@ -159,12 +205,15 @@ public class DataManager {
             final String fname = mFileBuffer.remove(0);
             filename = fname;
         }
-        Log.d("[RAY]", "now uploading ... "+filename);
+//        Log.d("[RAY]", "now uploading ... "+filename);
         //upload fname
         uploadFile(filename);
     }
 
     //uploading
+    /**
+     * Upload the file through fileuploader (here is the amazon uploader)
+     */
     public void uploadFile(String fname) {
         if (!Helper.CheckNetworkConnected(context) || mFileUploading.contains(fname)) return;
         if (bufferSize > 0){
@@ -176,9 +225,12 @@ public class DataManager {
         DataUploader.AmazonAWSUploader(context, fname, "public/"+tokens[tokens.length-1]);
     }
 
-    //when uploading finished, upload the next buffer if buffersize is enough
+    /**
+     * Get notified when upload file is finished
+     */
     public void OnUploadFinished(String filename) {
-        Log.d("[RAY]", "OnUploadFinished + " + filename);
+//        Log.d("[RAY]", "OnUploadFinished + " + filename);
+        //when uploading finished, upload the next buffer if buffersize is enough
         if (bufferSize > 0) {
             synchronized (mFileUploading) {
                 mFileUploading.remove(filename);
@@ -186,6 +238,7 @@ public class DataManager {
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         }
+        //update the item information
         RecordItem item = findItemByPath(filename);
         if (item != null) {
             item.uploaded = true;
@@ -195,6 +248,7 @@ public class DataManager {
 
     public void OnUploadError(String filename) {
         if (bufferSize > 0) {
+            //if upload error, we add the file to buffer again
             synchronized (mFileUploading) {
                 mFileUploading.remove(filename);
             }
@@ -212,12 +266,19 @@ public class DataManager {
     }
 
     // fileNames
+    /**
+     * Get the file name based on current name
+     */
     public String getRecordingNameOfTime(){
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         timeStamp += ".wav";
         return folderName + File.separator + timeStamp;
     }
 
+    /**
+     * Get the file name based on current name, with custom prefix
+     * @param prefix
+     */
     public String getRecordingNameOfTimeWithPrefix(String prefix) {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         timeStamp = prefix + timeStamp + ".wav";
@@ -225,6 +286,20 @@ public class DataManager {
     }
 
     //new recording added, clean old files
+    /**
+     * Get called when new recording finishes
+     * Create the RecordItem instance for new recording
+     * Clean old local files if maxFilesBeforeDelete > 0, upload files if auto_upload is on
+     * If the file should not be kept, it will be stored in mShouldNotKeepBuffer and be deleted later
+     * If the file should be kept, it will be stored in the mFolderFileList
+     * @param filename the file name of the new recording
+     * @param createdate the time of the recording started
+     * @param duration the recording duration
+     * @param shouldkeep whether the recording should be kept
+     * @param preceding_mode if preceding mode is on and the file shouldkeep is true,
+     *                       it will also keep most recent two files in mShouldNotKeepBuffer, and move them to mFolderFileList
+     *                       Because they are the preceding recordings of the formal recording file
+     */
     public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, boolean preceding_mode) {
         RecordItem newitem = new RecordItem();
         newitem.path = filename;
@@ -237,6 +312,8 @@ public class DataManager {
 
         if (shouldkeep) {
             if (preceding_mode){
+                //if in preceding mode and the shouldkeep is true, it means the recording file is triggered intentionally
+                //rather than the background recording. Thus we should store its preceding two clips
                 int bfsize = mShouldNotKeepBuffer.size();
                 //we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
                 for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
@@ -258,6 +335,8 @@ public class DataManager {
             mFolderFileList.add(0, newitem);
             new insertAsyncTask(recordItemDAO).execute(newitem);
         } else {
+            // if should_keep is false, then it is temporary background clips for preceding files
+            // we store them in the shouldnotkeepbuffer, and when the buffer is full, we delete the first file
             mShouldNotKeepBuffer.add(newitem);
             new insertAsyncTask(recordItemDAO).execute(newitem);
 
@@ -289,6 +368,10 @@ public class DataManager {
     }
 
     //local file operations
+
+    /**
+     * Delete old local files if current local files is more than the maxFilesBeforeDelete parameter
+     */
     private void deleteFilesOutOfMaxFiles() {
         if (folderName != null){
             if (maxFilesBeforeDelete <= 0) return;
@@ -305,6 +388,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * Delete a local file
+     */
     public void deleteFile(RecordItem item) {
         File file = new File(item.path);
         file.delete();
@@ -321,6 +407,10 @@ public class DataManager {
         }
     }
 
+    /**
+     * Return the item with a certain path
+     * @param fname the path of the item
+     */
     private RecordItem findItemByPath(String fname) {
         for(RecordItem item : mFolderFileList) {
             if(item.path == fname) {
@@ -331,6 +421,9 @@ public class DataManager {
     }
 
     //DB Operations
+    /**
+     * Async class for inserting the item in DB
+     */
     private static class insertAsyncTask extends AsyncTask<RecordItem, Void, Void> {
 
         private RecordItemDAO mAsyncTaskDao;
@@ -346,6 +439,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * Async class for deleting the item in DB
+     */
     private static class deleteAsyncTask extends AsyncTask<RecordItem, Void, Void> {
 
         private RecordItemDAO mAsyncTaskDao;
@@ -361,6 +457,9 @@ public class DataManager {
         }
     }
 
+    /**
+     * Async class for updating the item in DB
+     */
     private static class updateAsyncTask extends AsyncTask<RecordItem, Void, Void> {
 
         private RecordItemDAO mAsyncTaskDao;

@@ -16,6 +16,10 @@ import com.userempowermentlab.kidsrecorder.FileViewAdapter;
 import com.userempowermentlab.kidsrecorder.Listener.FileVIewMultiselectedListener;
 import com.userempowermentlab.kidsrecorder.R;
 
+/**
+ * FileExplorer UI Activity, show the local recording clips
+ * Code reference from SoundRecorder: https://github.com/dkim0419/SoundRecorder
+ */
 public class FileExplorerActivity extends AppCompatActivity implements FileVIewMultiselectedListener{
     private RecyclerView mRecyclerView;
     private FileViewAdapter mAdapter;

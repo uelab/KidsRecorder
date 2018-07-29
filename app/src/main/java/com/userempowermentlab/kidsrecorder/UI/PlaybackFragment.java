@@ -32,7 +32,10 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * Playback Fragment UI in File Explorer Activity
+ * Code credits from SoundRecorder https://github.com/dkim0419/SoundRecorder
+ */
 public class PlaybackFragment extends DialogFragment {
     private static final String ARG_ITEM = "recording_item";
     private RecordItem item;

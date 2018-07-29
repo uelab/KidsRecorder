@@ -4,6 +4,10 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+/**
+ * The database item for a recording
+ */
+
 @Entity(tableName = "recorditem_table")
 public class RecordItem {
     @NonNull

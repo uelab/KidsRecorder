@@ -11,6 +11,8 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import java.io.File;
 
 /**
+ * The upload class
+ * Code provided by Amazon https://docs.aws.amazon.com/aws-mobile/latest/developerguide/add-aws-mobile-user-data-storage.html
  * Created by mingrui on 7/16/2018.
  */
 
