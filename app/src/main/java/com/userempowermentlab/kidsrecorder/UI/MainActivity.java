@@ -274,7 +274,6 @@ public class MainActivity extends AppCompatActivity {
     void startRecording(){
         if (recordingManager == null) return;
         updateRecordSettings();
-        recordingManager.setAlwaysRunning(record_keepawake & record_background);
         int time_limit = record_length;
         recordingManager.StartRecording(dataManager.getRecordingNameOfTimeWithPrefix(storage_fileprefix), time_limit);
     }
