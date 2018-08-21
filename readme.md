@@ -1,4 +1,4 @@
-# KidSRecorder
+# KidsRecorder
 A recorder for research with kids.
 ## How to use
 
