@@ -1,5 +1,12 @@
 # KidsRecorder
 A recorder for research with kids.
+
+![]()
+<img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103148.png" width="210">
+<img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103158.png" width="210">
+<img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103205.png" width="210">
+<img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103209.png" width="210">
+
 ## How to use
 
 #### AndroidManifest
