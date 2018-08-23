@@ -36,16 +36,16 @@ public class DataManager {
     private int maxFilesBeforeDelete = 0; // 0 - never delete; > 0 - delete the old files if more than the number of recording exists
     private String folderName = null; // the folder name of the recorded files
 
-    //file list arrays
-    private ArrayList<RecordItem> mFolderFileList; //mFolderFileList stores all recording files in the folder
+    // file list arrays
+    private ArrayList<RecordItem> mFolderFileList; // mFolderFileList stores all recording files in the folder
     //we need the lists to be thread-safe
     private List<String> mFileUploading = Collections.synchronizedList(new ArrayList<String>()); // the uploading file list
     private List<String> mFileBuffer = Collections.synchronizedList(new ArrayList<String>()); // the uploading buffer
 
-    //if the clip is not keeped, we store them in this buffer
-    private List<RecordItem> mShouldNotKeepBuffer = new ArrayList<RecordItem>(); //Only useful in preceding mode
+    // if the clip is not kept, we store them in this buffer
+    private List<RecordItem> mShouldNotKeepBuffer = new ArrayList<RecordItem>(); // only useful in preceding mode
 
-    //permanent storage. DB is for file information, Preferences is for uploading buffer
+    // permanent storage. DB is for file information, Preferences is for uploading buffer
     private RecordItemDAO recordItemDAO;
     private Context context;
     private SharedPreferences preferences;
@@ -61,7 +61,6 @@ public class DataManager {
     public void Initialize(Context context) {
         this.context = context;
 
-        //db stuff
         RecordItemRoomDatabase db = RecordItemRoomDatabase.getDatabase(context);
         recordItemDAO = db.recordItemDAO();
 
@@ -70,12 +69,11 @@ public class DataManager {
             public void run() {
                 mFolderFileList = new ArrayList<RecordItem>(recordItemDAO.getAllRecordings());
 
-                //update list
+                // Synchronize the state of the database with the actual files on disk
                 for (int i = mFolderFileList.size()-1; i >= 0; --i){
                     RecordItem item = mFolderFileList.get(i);
                     final File record = new File(item.path);
                     if (!record.exists() || !item.should_keep) {
-                        Log.d("[RAY]", "delete file, should keep "+item.should_keep);
                         mFolderFileList.remove(i);
                         new deleteAsyncTask(recordItemDAO).execute(item);
                     }
@@ -85,16 +83,16 @@ public class DataManager {
         loadBuffer();
     }
 
-    //singleton
+    // singleton
     private DataManager(){}
 
     /**
      * Get the instance of the manager. It is singleton class, thus there would only be one instance of the class through the whole application
      * Use this function to retrieve the manager
      */
-    public static DataManager getInstance(){ return instance; }
+    public static DataManager getInstance() { return instance; }
 
-    //setters
+    // setters
 
     /**
      * How many files should be kept in the local storage
@@ -137,7 +135,7 @@ public class DataManager {
         this.bufferSize = bufferSize;
     }
 
-    //getters
+    // getters
 
     /**
      * Get the recording item at position of the mFolderFileList
@@ -157,13 +155,12 @@ public class DataManager {
         return mFolderFileList.size();
     }
 
-    //buffer
+    // buffer
 
     /**
      * Store the buffer information in permanent storage
      */
     public void storeBuffer() {
-
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
@@ -184,10 +181,9 @@ public class DataManager {
             }.getType();
             mFileBuffer = gson.fromJson(buffer_json, type);
             mFileBuffer = Collections.synchronizedList(mFileBuffer);
-            Log.d("[RAY]", "loaded Buffer!");
         }
 
-        //check if every file in bufferlist exists
+        // check if every file in bufferlist exists
         for (int i = mFileBuffer.size()-1; i >= 0; --i){
             File f = new File(mFileBuffer.get(i));
             if (!f.exists())
@@ -205,12 +201,10 @@ public class DataManager {
             final String fname = mFileBuffer.remove(0);
             filename = fname;
         }
-//        Log.d("[RAY]", "now uploading ... "+filename);
-        //upload fname
         uploadFile(filename);
     }
 
-    //uploading
+    // uploading
     /**
      * Upload the file through fileuploader (here is the amazon uploader)
      */
@@ -222,15 +216,14 @@ public class DataManager {
             }
         }
         String[] tokens = fname.split("/");
-        DataUploader.AmazonAWSUploader(context, fname, "public/"+tokens[tokens.length-1]);
+        DataUploader.AmazonAWSUploader(context, fname, "public/" + tokens[tokens.length-1]);
     }
 
     /**
      * Get notified when upload file is finished
      */
     public void OnUploadFinished(String filename) {
-//        Log.d("[RAY]", "OnUploadFinished + " + filename);
-        //when uploading finished, upload the next buffer if buffersize is enough
+        // when uploading finished, upload the next buffer if buffersize is enough
         if (bufferSize > 0) {
             synchronized (mFileUploading) {
                 mFileUploading.remove(filename);
@@ -238,7 +231,7 @@ public class DataManager {
             if (mFileBuffer.size() > bufferSize)
                 uploadBuffer();
         }
-        //update the item information
+        // update the item information
         RecordItem item = findItemByPath(filename);
         if (item != null) {
             item.uploaded = true;
@@ -248,7 +241,7 @@ public class DataManager {
 
     public void OnUploadError(String filename) {
         if (bufferSize > 0) {
-            //if upload error, we add the file to buffer again
+            // if upload error, we add the file to buffer again
             synchronized (mFileUploading) {
                 mFileUploading.remove(filename);
             }
@@ -260,7 +253,7 @@ public class DataManager {
                 uploadBuffer();
         } else {
             if (!Helper.CheckNetworkConnected(context)) return;
-            //upload again
+            // upload again
             uploadFile(filename);
         }
     }
@@ -285,7 +278,7 @@ public class DataManager {
         return folderName + File.separator + timeStamp;
     }
 
-    //new recording added, clean old files
+    // new recording added, clean old files
     /**
      * Get called when new recording finishes
      * Create the RecordItem instance for new recording
@@ -312,10 +305,10 @@ public class DataManager {
 
         if (shouldkeep) {
             if (preceding_mode){
-                //if in preceding mode and the shouldkeep is true, it means the recording file is triggered intentionally
-                //rather than the background recording. Thus we should store its preceding two clips
+                // if in preceding mode and the shouldkeep is true, it means the recording file is triggered intentionally
+                // rather than the background recording. Thus we should store its preceding two clips
                 int bfsize = mShouldNotKeepBuffer.size();
-                //we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
+                // we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
                 for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
                     RecordItem item = mShouldNotKeepBuffer.remove(0);
                     item.should_keep = true;
@@ -350,7 +343,7 @@ public class DataManager {
 
         deleteFilesOutOfMaxFiles();
         if (autoUpload) {
-            //if no buffer, upload new files
+            // if no buffer, upload new files
             if (bufferSize == 0 && shouldkeep) {
                 //upload
                 uploadFile(filename);
@@ -367,7 +360,7 @@ public class DataManager {
         }
     }
 
-    //local file operations
+    // local file operations
 
     /**
      * Delete old local files if current local files is more than the maxFilesBeforeDelete parameter
@@ -394,9 +387,8 @@ public class DataManager {
     public void deleteFile(RecordItem item) {
         File file = new File(item.path);
         file.delete();
-//        Log.d("[RAY]", "deleteFileAtLocation: "+ item.filename + "uploaded? " + item.uploaded + " starting date: " + item.createDate);
 
-        //remove from every list
+        // remove from every list
         mFolderFileList.remove(item);
         new deleteAsyncTask(recordItemDAO).execute(item);
         synchronized (mFileBuffer) {
@@ -420,7 +412,7 @@ public class DataManager {
         return null;
     }
 
-    //DB Operations
+    // DB Operations
     /**
      * Async class for inserting the item in DB
      */
