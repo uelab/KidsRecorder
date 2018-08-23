@@ -17,7 +17,6 @@ public abstract class RecordItemRoomDatabase extends RoomDatabase {
         if (INSTANCE == null) {
             synchronized (RecordItemRoomDatabase.class) {
                 if (INSTANCE == null) {
-                    // Create database here
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             RecordItemRoomDatabase.class, "recorditem_database")
                             .build();
