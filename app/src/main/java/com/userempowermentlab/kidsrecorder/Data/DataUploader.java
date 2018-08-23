@@ -19,7 +19,6 @@ import java.io.File;
 public class DataUploader {
 
     public static void AmazonAWSUploader(final Context context, final String filename, final String toname) {
-//        Log.d("[RAY]", "uploading "+filename+" to "+toname);
         TransferUtility transferUtility =
                 TransferUtility.builder()
                         .context(context)
@@ -48,9 +47,6 @@ public class DataUploader {
             public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
                 float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
                 int percentDone = (int)percentDonef;
-//
-//                Log.d("YourActivity", "ID:" + id + " bytesCurrent: " + bytesCurrent
-//                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
             }
 
             @Override
