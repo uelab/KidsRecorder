@@ -165,7 +165,7 @@ dataManager.setAutoUpload(boolean);
 //set whether recording even screen is locked  
 recordingManager.setAlwaysRunning(boolean);  
 //enable preceding mode 
-recordingManager.setShould_preced(true);  
+recordingManager.setShouldPrecede(true);
 //set preceding time before the formal recording, in seconds
 recordingManager.setPrecedingTime(int);
 ```

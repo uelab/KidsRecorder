@@ -40,7 +40,7 @@ public class RecordingManager extends Service {
     private int recordingTime = 0; // 0 for manually stop recording; > 0 for limited recording time in ms
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
 
-    private boolean should_preced = false; // whether to record preceding or not
+    private boolean should_precede = false; // whether to record preceding or not
     private int precedingTime = 0; //enable preceding time record , in ms
     private boolean should_keep = true; // if should_keep && auto_upload, the file would be upload, otherwise it won't
 
@@ -70,8 +70,8 @@ public class RecordingManager extends Service {
     /**
      * whether the recorder should record preceding clips before the formal recodring start
      */
-    public void setShould_preced(boolean should_preced) {
-        this.should_preced = should_preced;
+    public void setShouldPrecede(boolean should_precede) {
+        this.should_precede = should_precede;
     }
 
     /**
@@ -79,7 +79,7 @@ public class RecordingManager extends Service {
      * @param precedingTime how long will be recorded before the formal recording is triggered (in second)
      */
     public void setPrecedingTime(int precedingTime) {
-        should_preced = true;
+        should_precede = true;
         this.precedingTime = precedingTime * 1000;
     }
 
@@ -90,16 +90,16 @@ public class RecordingManager extends Service {
      * Should_keep is useful when preceding mode is on. To get preceding recording, the recorder would always record *background* clips
      * Thus many background would not be kept, only the ones before the triggered recording could be kept.
      */
-    public void setShould_keep(boolean should_keep) {
+    public void setShouldKeep(boolean should_keep) {
         this.should_keep = should_keep;
     }
 
     /**
      * Returns the recording time (after stop or paused)
      */
-    public int getRecordedTime() {
+    public int getElapsedRecordingTime() {
         if (recorder != null && recorder.isRecording()) {
-            return recorder.getRecordedTime();
+            return recorder.getElapsedRecordingTime();
         }
         else return 0;
     }
@@ -272,7 +272,7 @@ public class RecordingManager extends Service {
             recorder.Stop();
         }
         if (manager != null) {
-            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDate(), recorder.getDuration(), should_keep, should_preced);
+            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDateTime(), recorder.getDuration(), should_keep, should_precede);
         }
     }
 

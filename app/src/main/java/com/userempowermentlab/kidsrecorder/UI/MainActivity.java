@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (recordingManager == null) return;
         recordingManager.setAlwaysRunning(record_keepawake & record_background);
-        recordingManager.setShould_preced(preceding_mode);
+        recordingManager.setShouldPrecede(preceding_mode);
         recordingManager.setPrecedingTime(preceding_time);
     }
 
@@ -234,13 +234,13 @@ public class MainActivity extends AppCompatActivity {
                     stopRecording();
                     isUIRecording = false;
                     if (preceding_mode && preceding_time > 0){
-                        recordingManager.setShould_keep(false);
+                        recordingManager.setShouldKeep(false);
                     }
                 } else {
                     if (preceding_mode && preceding_time > 0){
                         //if the preceding mode is on, then we should first stop the background recording
                         stopSilentRecording();
-                        recordingManager.setShould_keep(true);
+                        recordingManager.setShouldKeep(true);
                     }
                     //then start the formal recording
                     startRecording();
