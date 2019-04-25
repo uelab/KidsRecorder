@@ -317,7 +317,6 @@ public class DataManager {
                     RecordItem item = mShouldNotKeepBuffer.remove(i);
                     item.should_keep = true;
                     mFolderFileList.add(0, item);
-                    Log.e("[HAHA]", "newRecordingAdded: " + item.filename);
                     new updateAsyncTask(recordItemDAO).execute(item);
                     if (autoUpload){
                         if (bufferSize == 0){

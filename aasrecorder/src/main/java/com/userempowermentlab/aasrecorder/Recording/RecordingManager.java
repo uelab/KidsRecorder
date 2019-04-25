@@ -211,7 +211,7 @@ public class RecordingManager extends Service {
      * @param filename the filename(full path) to be saved
      */
     public void StartRecording(String filename) {
-        Log.d("[RAY]", "Recording start + " + filename);
+//        Log.d("[Log]", "Recording start + " + filename);
         if (recorder.isRecording()){
             StopRecordingSilently();
         }
@@ -258,7 +258,7 @@ public class RecordingManager extends Service {
             StopRecordingSilently();
         }
         if (precedingTime <= 0) return;
-        Log.d("[RAY]", "Recording silent start");
+//        Log.d("[Log]", "Recording silent start");
         should_keep = false;
         recorder.setFilePath(filename);
         recorder.Start();
@@ -271,7 +271,7 @@ public class RecordingManager extends Service {
      * Or by other classes to stop background preceding mode recording
      */
     public void StopRecordingSilently(){
-        Log.d("[RAY]", "Recording Stopped, should_KEEP "+ should_keep);
+//        Log.d("[Log]", "Recording Stopped, should_KEEP "+ should_keep);
         mHandler.removeCallbacks(mTimerStopRecorder);
         if (recorder.isRecording()){
             recorder.Stop();
@@ -286,7 +286,7 @@ public class RecordingManager extends Service {
      * should be used by other classes if it's formal (not preceding mode) recording
      */
     public void StopRecording() {
-        Log.d("[RAY]", "preceding time : "+ precedingTime);
+//        Log.d("[Log]", "preceding time : "+ precedingTime);
 
         StopRecordingSilently();
         sendBroadCast(RecordingStatus.RECORDING_STOPPED);
@@ -294,7 +294,7 @@ public class RecordingManager extends Service {
         //for preceding mode on, then auto start the background recording
         if (precedingTime > 0) {
             SystemClock.sleep(100);
-            Log.d("[RAY]", "StopRecording: autostart");
+//            Log.d("[Log]", "StopRecording: autostart");
             StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
         }
     }
