@@ -36,10 +36,10 @@ import android.widget.Toast;
 import com.amazonaws.mobile.auth.core.IdentityManager;
 import com.amazonaws.mobile.auth.core.SignInStateChangeListener;
 import com.amazonaws.mobile.auth.ui.SignInUI;
-import com.userempowermentlab.kidsrecorder.Data.DataManager;
+import com.userempowermentlab.aasrecorder.Data.DataManager;
+import com.userempowermentlab.aasrecorder.Recording.RecordingManager;
+import com.userempowermentlab.aasrecorder.Recording.RecordingStatus;
 import com.userempowermentlab.kidsrecorder.R;
-import com.userempowermentlab.kidsrecorder.Recording.RecordingManager;
-import com.userempowermentlab.kidsrecorder.Recording.RecordingStatus;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
@@ -132,10 +132,11 @@ public class MainActivity extends AppCompatActivity {
                     case RECORDING_STOPPED:
                         //the recording stopped, not because the user pressed the button
                         stopRecordingUI();
+
                         if (notifyEvents != null){
                             if (notifyEvents.contains(getResources().getString(R.string.stop))) {
                                 makeIndicator(getResources().getString(R.string.stop));
-                            } else if (notifyStyles != null && notifyStyles.contains(R.string.statusBar)) {
+                            } else if (notifyStyles != null && notifyStyles.contains(getResources().getString(R.string.statusBar))) {
                                 //if stop is not selected as event, but start is and there's status bar notification
                                 //we need to cancel it
                                 recordingManager.cancelNotification();
@@ -268,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
      */
     void stopRecordingUI() {
         mChronometer.stop();
-        mRecordButton.setImageResource(R.drawable.ic_media_play);
+        mRecordButton.setImageResource(R.drawable.ic_mic_white_36dp);
     }
 
     void startRecording(){
@@ -309,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
         if (notifyStyles.contains(getResources().getString(R.string.statusBar))) {
             if (recordingManager != null) {
                 if (event == getResources().getString(R.string.start)) {
-                    recordingManager.createNotification();
+                    recordingManager.createNotification(this);
                 } else if (event == getResources().getString(R.string.stop)) {
                     recordingManager.cancelNotification();
                 }
@@ -346,9 +347,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         updateRecordSettings();
+        Log.e("here", "onStart: "+preceding_mode+preceding_time+(recordingManager==null));
         //if the preceding mode is on, and the background mode is off, then should start preceding recording silently
         if (!record_background && recordingManager != null && preceding_time > 0 && preceding_mode ) {
-            recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTime(), preceding_time);
+            recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTimeWithPrefix("preceding"), preceding_time);
         }
     }
 
@@ -486,6 +488,12 @@ public class MainActivity extends AppCompatActivity {
             RecordingManager.LocalBinder binder = (RecordingManager.LocalBinder) service;
             recordingManager = binder.getServiceInstance();
             serviceBound = true;
+
+            //for auto-recording
+            updateRecordSettings();
+            if (preceding_time > 0 && preceding_mode ) {
+                recordingManager.StartRecordingSilently(dataManager.getRecordingNameOfTimeWithPrefix("preceding"), preceding_time);
+            }
         }
 
         @Override

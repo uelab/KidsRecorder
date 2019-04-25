@@ -1,4 +1,4 @@
-package com.userempowermentlab.kidsrecorder.Data;
+package com.userempowermentlab.aasrecorder.Data;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;

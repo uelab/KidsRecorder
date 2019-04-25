@@ -1,11 +1,12 @@
-package com.userempowermentlab.kidsrecorder.Data;
+package com.userempowermentlab.aasrecorder.Data;
+
 import android.content.Context;
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobileconnectors.s3.transferutility.*;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
 
 import java.io.File;

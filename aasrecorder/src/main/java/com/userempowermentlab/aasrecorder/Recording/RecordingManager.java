@@ -1,6 +1,7 @@
-package com.userempowermentlab.kidsrecorder.Recording;
+package com.userempowermentlab.aasrecorder.Recording;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -18,9 +19,8 @@ import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.userempowermentlab.kidsrecorder.Data.DataManager;
-import com.userempowermentlab.kidsrecorder.R;
-import com.userempowermentlab.kidsrecorder.UI.MainActivity;
+import com.userempowermentlab.aasrecorder.Data.DataManager;
+import com.userempowermentlab.aasrecorder.R;
 
 import static android.content.ContentValues.TAG;
 
@@ -59,7 +59,7 @@ public class RecordingManager extends Service {
         if (alwaysRunning){
             PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                    "MyWakelockTag");
+                    "uekidsrecorder:MyWakelockTag");
             wakeLock.acquire();
         } else if (wakeLock != null) {
             wakeLock.release();
@@ -168,18 +168,22 @@ public class RecordingManager extends Service {
     /**
      * Create notification of the recording status on status bar
      */
-    public void createNotification() {
+    public void createNotification(Activity activity) {
         NotificationManager mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createChannel(mNotifyManager);
         NotificationCompat.Builder buildier = new NotificationCompat.Builder(this.getApplicationContext());
-        Intent intent = new Intent(this, MainActivity.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createChannel(mNotifyManager, buildier);
+        try {
+            Intent intent = new Intent(this, Class.forName(activity.getClass().getName()));
 
-        buildier.setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
-                .setContentTitle(getResources().getString(R.string.isrecording))
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setOngoing(true)
-                .setWhen(System.currentTimeMillis());
-        mNotifyManager.notify(0, buildier.build());
+            buildier.setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
+                    .setContentTitle(getResources().getString(R.string.isrecording))
+                    .setSmallIcon(R.drawable.ic_launcher)
+                    .setOngoing(true)
+                    .setWhen(System.currentTimeMillis());
+            mNotifyManager.notify(0, buildier.build());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -191,13 +195,14 @@ public class RecordingManager extends Service {
     }
 
     @TargetApi(26)
-    private void createChannel(NotificationManager notificationManager) {
-        String name = getResources().getString(R.string.isrecording);
+    private void createChannel(NotificationManager notificationManager, NotificationCompat.Builder builder) {
+        String channelID = "uelab_recorder:notificationid";
         int importance = NotificationManager.IMPORTANCE_DEFAULT;
 
-        NotificationChannel mChannel = new NotificationChannel(name, name, importance);
+        NotificationChannel mChannel = new NotificationChannel(channelID, getResources().getString(R.string.isrecording), importance);
         mChannel.enableLights(true);
         notificationManager.createNotificationChannel(mChannel);
+        builder.setChannelId("uelab_recorder:notificationid");
     }
 
     /**
@@ -288,9 +293,9 @@ public class RecordingManager extends Service {
 
         //for preceding mode on, then auto start the background recording
         if (precedingTime > 0) {
-           SystemClock.sleep(100);
-           Log.d("[RAY]", "StopRecording: autostart");
-           StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
+            SystemClock.sleep(100);
+            Log.d("[RAY]", "StopRecording: autostart");
+            StartRecordingSilently(manager.getRecordingNameOfTimeWithPrefix("preceding"));
         }
     }
 

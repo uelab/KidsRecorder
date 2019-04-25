@@ -24,7 +24,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.userempowermentlab.kidsrecorder.Data.RecordItem;
+import com.userempowermentlab.aasrecorder.Data.RecordItem;
 import com.userempowermentlab.kidsrecorder.R;
 
 import java.io.IOException;

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#f44336</color>
+    <color name="colorPrimaryDark">#D32F2F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="btnRed">#F44336</color>
+    <color name="btnPressed">#D32F2F</color>
+    <color name="uploadGreen">#2cae4a</color>
+    <color name="selectGray">#d8898b8a</color>
+</resources>

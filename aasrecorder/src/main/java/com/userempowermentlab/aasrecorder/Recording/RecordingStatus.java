@@ -1,4 +1,4 @@
-package com.userempowermentlab.kidsrecorder.Recording;
+package com.userempowermentlab.aasrecorder.Recording;
 
 /**
  * Created by mingrui on 7/16/2018.

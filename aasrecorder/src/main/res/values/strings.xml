@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">KidsRecorder</string>
+    <string name="settings">Settings</string>
+    <string name="signout">Sign Out</string>
+    <string name="recordings">Recordings</string>
+    <string name="upload">Upload</string>
+    <string name="delete">Delete</string>
+    <string name="share">Share</string>
+
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="vibration">Vibration</string>
+    <string name="sound">Sound</string>
+    <string name="statusBar">StatusBar</string>
+    <string name="toast">Toast</string>
+
+    <string name="isrecording">Recording...</string>
+    <string name="notrecording">Recording stopped.</string>
+
+    <!-- File explorer texts-->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="dialog_title_delete">DELETE</string>
+    <string name="dialog_text_delete">Are you sure to delete the files?</string>
+    <string name="dialog_action_yes">YES</string>
+    <string name="dialog_action_no">CANCEL</string>
+    <string name="toast_file_delete">File deleted</string>
+
+    <!-- Settings -->
+    <string name="settings_category_recording">Recording</string>
+    <string name="settings_category_indicator">Indicator</string>
+    <string name="settings_category_storage">Storage</string>
+
+    <string name="settings_record_timing">Limit Recording Duration</string>
+    <string name="settings_record_length">Set Recording Duration (in Sec)</string>
+    <string name="settings_record_length_desc">The time limitation of one recording. Only valid when Duration Limitation is enabled.</string>
+    <string name="settings_preceding_time">Set recording preceding time (in Sec)</string>
+    <string name="settings_preceding_time_desc">The preceding time before a recording. Only valid when greater than 0 (better greater than 10 sec).</string>
+
+    <string name="settings_record_autorestart">Auto Restart Recording After Stopped</string>
+    <string name="settings_record_background">Record in Background</string>
+    <string name="settings_record_background_desc">Record in Background</string>
+    <string name="settings_record_keepawake">Always Recording</string>
+    <string name="settings_record_keepawake_desc">Keeps phone on and always recording. Will drain battery fast. Only valid when Background mode is enabled.</string>
+
+    <string name="settings_storage_fileprefix">Filename Prefix</string>
+    <string name="settings_storage_fileprefix_desc">Set the prefix of the recording files. If empty, the filenames will be the timestamp.</string>
+    <string name="settings_storage_autoupload">Auto Upload Recordings</string>
+    <string name="settings_storage_buffersize">Buffer Size</string>
+    <string name="settings_storage_buffersize_desc">If buffer size is larger than 0, local recordings will be buffered before uploading. Only valid when Auto Upload is enabled.</string>
+    <string name="settings_storage_limit">Local Storage Limitation</string>
+    <string name="settings_storage_limit_desc">If the limitation is larger than 0, the older recordings that exceeds the limitation will be deleted.</string>
+
+    <string name="settings_indicator_event">Record Indicator Event</string>
+    <string name="settings_indicator_event_desc">Set the recording event when you want to get notified.</string>
+    <string name="settings_indicator_style">Record Indicator Style</string>
+    <string name="settings_indicator_style_desc">Set the notification style when the event happens</string>
+
+</resources>

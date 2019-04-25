@@ -1,4 +1,4 @@
-package com.userempowermentlab.kidsrecorder.Data;
+package com.userempowermentlab.aasrecorder.Data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.userempowermentlab.kidsrecorder.Helper;
+import com.userempowermentlab.aasrecorder.Helper;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,6 +76,10 @@ public class DataManager {
                     if (!record.exists() || !item.should_keep) {
                         mFolderFileList.remove(i);
                         new deleteAsyncTask(recordItemDAO).execute(item);
+                        //and delete those who should not exist
+                        if (record.exists()){
+                            record.delete();
+                        }
                     }
                 }
             }
@@ -310,9 +314,10 @@ public class DataManager {
                 int bfsize = mShouldNotKeepBuffer.size();
                 // we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
                 for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
-                    RecordItem item = mShouldNotKeepBuffer.remove(0);
+                    RecordItem item = mShouldNotKeepBuffer.remove(i);
                     item.should_keep = true;
                     mFolderFileList.add(0, item);
+                    Log.e("[HAHA]", "newRecordingAdded: " + item.filename);
                     new updateAsyncTask(recordItemDAO).execute(item);
                     if (autoUpload){
                         if (bufferSize == 0){

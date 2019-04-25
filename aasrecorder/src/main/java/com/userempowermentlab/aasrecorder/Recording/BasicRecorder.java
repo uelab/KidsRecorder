@@ -1,4 +1,4 @@
-package com.userempowermentlab.kidsrecorder.Recording;
+package com.userempowermentlab.aasrecorder.Recording;
 
 import android.app.Service;
 import android.content.Intent;

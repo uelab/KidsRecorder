@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="event_list">
+        <item>@string/start</item>
+        <item>@string/stop</item>
+    </string-array>
+
+    <string-array name="style_list">
+        <item>@string/vibration</item>
+        <item>@string/sound</item>
+        <item>@string/statusBar</item>
+        <item>@string/toast</item>
+    </string-array>
+
+</resources>
