@@ -188,7 +188,7 @@ protected void onStop() {
 ``` 
 
 #### Preceding mode
-Preceding mode means when recording, a preceding time will also be recorded. For example, if we set preceding time to 10 seconds, when the user click "record" button (a formal recording),  30 seconds before the buttonclicking would also be stored.
+Preceding mode means when recording, a preceding time will also be recorded. For example, if we set preceding time to 10 seconds, when the user click "record" button (a formal recording),  10 seconds before the buttonclicking would also be stored.
 
 The mechanism of preceding mode is that `RecordingManager` would keep recording small clips that equal to length ``precedingTime``. When the formal recording is triggered, it would stop the small recording, and keep the former two clips, then start the formal recording. When the formal recording ends, it would start small clips recording again. If there is no formal recording, it will discard the small clips constantly. 
 

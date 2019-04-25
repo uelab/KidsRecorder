@@ -151,7 +151,7 @@ public class DataManager {
     /**
      * Get how many recording items in mFolderFileList (in the local storage folder)
      */
-    public int getItemCout() {
+    public int getItemCount() {
         return mFolderFileList.size();
     }
 

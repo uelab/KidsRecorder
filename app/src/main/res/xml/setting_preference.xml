@@ -68,7 +68,7 @@
         <android.support.v7.preference.EditTextPreference
             android:key="storage_limit"
             android:title="@string/settings_storage_limit"
-            android:summary="@string/settings_storage_buffersize_desc"
+            android:summary="@string/settings_storage_limit_desc"
             android:digits="0123456789"
             android:inputType="numberPassword"
             android:defaultValue="0" />

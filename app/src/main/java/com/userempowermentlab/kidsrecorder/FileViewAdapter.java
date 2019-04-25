@@ -195,7 +195,7 @@ public class FileViewAdapter extends RecyclerView.Adapter<FileViewAdapter.Record
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return dataManager.getItemCout();
+        return dataManager.getItemCount();
     }
 
     //UI & interaction stuff

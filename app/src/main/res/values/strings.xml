@@ -48,7 +48,7 @@
     <string name="settings_storage_buffersize">Buffer Size</string>
     <string name="settings_storage_buffersize_desc">If buffer size is larger than 0, local recordings will be buffered before uploading. Only valid when Auto Upload is enabled.</string>
     <string name="settings_storage_limit">Local Storage Limitation</string>
-    <string name="settings_storage_limit_desc">If the limitation is larger than 0, the older recordings will be deleted.</string>
+    <string name="settings_storage_limit_desc">If the limitation is larger than 0, the older recordings that exceeds the limitation will be deleted.</string>
 
     <string name="settings_indicator_event">Record Indicator Event</string>
     <string name="settings_indicator_event_desc">Set the recording event when you want to get notified.</string>
