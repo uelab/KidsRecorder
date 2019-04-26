@@ -1,6 +1,7 @@
 # KidsRecorder
 [![API](https://img.shields.io/badge/API-23%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=23)
 [![Build Status](https://travis-ci.com/uelab/KidsRecorder.svg?branch=master)](https://travis-ci.com/uelab/KidsRecorder)
+[![](https://jitpack.io/v/uelab/KidsRecorder.svg)](https://jitpack.io/#uelab/KidsRecorder)
 
 A recorder for research with kids.
 
@@ -11,6 +12,25 @@ A recorder for research with kids.
 <img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103209.png" width="210">
 
 ## How to use
+
+If you just want to use the core recorder and file functions, you can  in your project:
+```java
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://jitpack.io' }
+		}
+	}
+```
+And then configure the dependency:
+
+```java
+	dependencies {
+	        implementation 'com.github.uelab:KidsRecorder:Tag'
+	}
+```
+
+However, if you want to also use the UI for recorder, the file explorer UI: please download the code and add them in your project. Examples are provided in this project.
 
 #### AndroidManifest
 1 - Add permissions into you `AndroidManifest.xml` and [request for them in Android 6.0+](https://developer.android.com/training/permissions/requesting.html)
