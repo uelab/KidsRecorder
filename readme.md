@@ -26,7 +26,7 @@ And then configure the dependency:
 
 ```java
 	dependencies {
-	        implementation 'com.github.uelab:KidsRecorder:Tag'
+	        implementation 'com.github.uelab:KidsRecorder:0.10'
 	}
 ```
 
