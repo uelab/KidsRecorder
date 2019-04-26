@@ -32,7 +32,7 @@ And then configure the dependency:
 
 However, if you want to also use the UI for recorder, the file explorer UI: please download the code and add them in your project. Examples are provided in this project.
 
-#### AndroidManifest
+### AndroidManifest
 1 - Add permissions into you `AndroidManifest.xml` and [request for them in Android 6.0+](https://developer.android.com/training/permissions/requesting.html)
 
 ```xml
@@ -92,7 +92,7 @@ _Please specify the later two activities as the child activity of the main recor
 </provider>
 ```
 
-#### RecordingManager & DataManager
+### RecordingManager & DataManager
 `RecordingManager` is the main recording class. It supports
 - [x] Record/Stop/Pause/Resume in Background/Foreground mode
 - [x] Broadcasting when record status changes
@@ -193,7 +193,7 @@ recordingManager.setShouldPrecede(true);
 recordingManager.setPrecedingTime(int);
 ```
 
-#### Foreground/Background recording
+### Foreground/Background recording
 Because `RecordingManager` is a service, it also runs in the background (when the app is not the current screen app). Thus if you want to only record in foreground, you can stop the recording in `onStop()`:
 
 ```java
@@ -207,7 +207,7 @@ protected void onStop() {
 }
 ``` 
 
-#### Preceding mode
+### Preceding mode
 Preceding mode means when recording, a preceding time will also be recorded. For example, if we set preceding time to 10 seconds, when the user click "record" button (a formal recording),  10 seconds before the buttonclicking would also be stored.
 
 The mechanism of preceding mode is that `RecordingManager` would keep recording small clips that equal to length ``precedingTime``. When the formal recording is triggered, it would stop the small recording, and keep the former two clips, then start the formal recording. When the formal recording ends, it would start small clips recording again. If there is no formal recording, it will discard the small clips constantly. 
@@ -239,13 +239,13 @@ In this way, we stopped all recordings (including the formal recording)
 
 _Notice that because the formal recording might interrupt the preceding small clip recording, thus to make sure the preceding recording is long enough, we store the two preceding recordings rather than one. Preceding recordings is named with "Preceding" prefix_
 
-#### AWS Authentication & Uploading
+### AWS Authentication & Uploading
 To enable the AWS integration, please refre to [here] (https://docs.aws.amazon.com/aws-mobile/latest/developerguide/aws-mobile-android-and-iOS.html)
 
 And put your mobile hub configuration file into _/app/src/main/res/raw/_
 
 ### UI 
-#### FileExplorer
+### FileExplorer
 To use the ``FileExplorerActivity`` in the library, you can just include them in your project.
 
 
