@@ -296,8 +296,9 @@ public class DataManager {
      * @param preceding_mode if preceding mode is on and the file shouldkeep is true,
      *                       it will also keep most recent two files in mShouldNotKeepBuffer, and move them to mFolderFileList
      *                       Because they are the preceding recordings of the formal recording file
+     * @param merge_with_preceding  if shouldkeep is true, whether the current file should merge with the preceding file into one file.
      */
-    public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, boolean preceding_mode) {
+    public void newRecordingAdded(String filename, String createdate, int duration, boolean shouldkeep, boolean preceding_mode, boolean merge_with_preceding) {
         RecordItem newitem = new RecordItem();
         newitem.path = filename;
         String[] tokens = filename.split("/");
@@ -312,23 +313,44 @@ public class DataManager {
                 // if in preceding mode and the shouldkeep is true, it means the recording file is triggered intentionally
                 // rather than the background recording. Thus we should store its preceding two clips
                 int bfsize = mShouldNotKeepBuffer.size();
-                // we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
-                for (int i = bfsize-1; i >= Math.max(0, bfsize-2); --i){
-                    RecordItem item = mShouldNotKeepBuffer.remove(i);
-                    item.should_keep = true;
-                    mFolderFileList.add(0, item);
-                    new updateAsyncTask(recordItemDAO).execute(item);
-                    if (autoUpload){
-                        if (bufferSize == 0){
-                            uploadFile(item.path);
-                        } else {
-                            synchronized (mFileBuffer) {
-                                mFileBuffer.add(item.path);
+
+                //if should merge files
+                if (merge_with_preceding){
+                    // we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
+                    float mtime = 0;
+                    ArrayList<String> mergelist = new ArrayList<String>();
+                    for (int i = bfsize - 1; i >= Math.max(0, bfsize - 2); --i) {
+                        RecordItem item = mShouldNotKeepBuffer.remove(i);
+                        mtime += item.duration;
+                        new deleteAsyncTask(recordItemDAO).execute(item);
+                        mergelist.add(item.path);
+                    }
+                    newitem.duration += mtime;
+                    mergelist.add(filename);
+                    MergeThread mtd = new MergeThread(mergelist.toArray(new String[0]));
+                    mtd.start();
+                }
+                //else we save them one by one
+                else {
+                    // we set bfsize - 2 because we want preceding two file clips, as only one preceding might not be long enough
+                    for (int i = bfsize - 1; i >= Math.max(0, bfsize - 2); --i) {
+                        RecordItem item = mShouldNotKeepBuffer.remove(i);
+                        item.should_keep = true;
+                        mFolderFileList.add(0, item);
+                        new updateAsyncTask(recordItemDAO).execute(item);
+                        if (autoUpload) {
+                            if (bufferSize == 0) {
+                                uploadFile(item.path);
+                            } else {
+                                synchronized (mFileBuffer) {
+                                    mFileBuffer.add(item.path);
+                                }
                             }
                         }
                     }
                 }
             }
+
             mFolderFileList.add(0, newitem);
             new insertAsyncTask(recordItemDAO).execute(newitem);
         } else {
@@ -346,17 +368,19 @@ public class DataManager {
         }
 
         deleteFilesOutOfMaxFiles();
-        if (autoUpload) {
+        processUpload(filename, shouldkeep);
+    }
+
+    private void processUpload(String filename, boolean shouldkeep) {
+        if (autoUpload && shouldkeep) {
             // if no buffer, upload new files
-            if (bufferSize == 0 && shouldkeep) {
+            if (bufferSize == 0) {
                 //upload
                 uploadFile(filename);
             } else {
-                if (shouldkeep) {
-                    synchronized (mFileBuffer) {
-                        mFileBuffer.add(filename);
-                        storeBuffer();
-                    }
+                synchronized (mFileBuffer) {
+                    mFileBuffer.add(filename);
+                    storeBuffer();
                 }
                 if (mFileBuffer.size() > bufferSize)
                     uploadBuffer();
@@ -468,6 +492,44 @@ public class DataManager {
         protected Void doInBackground(final RecordItem... params) {
             mAsyncTaskDao.update(params[0]);
             return null;
+        }
+    }
+
+    private class MergeThread extends Thread {
+        String[] fnames;
+        String outpath;
+        public MergeThread(String[] fnames){
+            this.fnames = fnames;
+            outpath = fnames[0].replace(".wav", "-merge.wav");
+        }
+
+        public void run() {
+            AudioMediaOperations.MergeAudios(fnames, outpath, new AudioMediaOperations.OperationCallbacks() {
+                @Override
+                public void onAudioOperationFinished() {
+                    //delete fnames
+//                    Log.e("[Log]", "onAudioOperationFinished: Merge Finished!" + fnames[fnames.length-1]);
+                    for (String s: fnames){
+                        File f = new File(s);
+                        f.delete();
+                    }
+                    File from = new File(outpath);
+                    File to = new File(fnames[fnames.length-1]);
+                    from.renameTo(to);
+                    deleteFilesOutOfMaxFiles();
+                    processUpload(fnames[fnames.length-1], true);
+                }
+
+                @Override
+                public void onAudioOperationError(Exception e) {
+//                    Log.e("[Log]", "onAudioOperationFinished: Merge Failed...!");
+                    for (String s: fnames){
+                        File f = new File(s);
+                        f.delete();
+                    }
+                }
+            });
+
         }
     }
 }

@@ -41,6 +41,8 @@ public class RecordingManager extends Service {
     private boolean alwaysRunning = false; //always run in background (useful if want to record when the app is in background)
 
     private boolean should_precede = false; // whether to record preceding or not
+    private boolean should_mergeprecede = true; // whether to merge the record with its preceding or not
+
     private int precedingTime = 0; //enable preceding time record , in ms
     private boolean should_keep = true; // if should_keep && auto_upload, the file would be upload, otherwise it won't
 
@@ -72,6 +74,13 @@ public class RecordingManager extends Service {
      */
     public void setShouldPrecede(boolean should_precede) {
         this.should_precede = should_precede;
+    }
+
+    /**
+     * whether the recorder should merge the recording with its preceding clips
+     */
+    public void setShouldMergePrecede(boolean should_meregprecede) {
+        this.should_mergeprecede = should_meregprecede;
     }
 
     /**
@@ -277,7 +286,7 @@ public class RecordingManager extends Service {
             recorder.Stop();
         }
         if (manager != null) {
-            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDateTime(), recorder.getDuration(), should_keep, should_precede);
+            manager.newRecordingAdded(recorder.getFilePath(), recorder.getStartDateTime(), recorder.getDuration(), should_keep, should_precede, should_mergeprecede);
         }
     }
 
