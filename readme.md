@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/uelab/KidsRecorder.svg?branch=master)](https://travis-ci.com/uelab/KidsRecorder)
 [![](https://jitpack.io/v/uelab/KidsRecorder.svg)](https://jitpack.io/#uelab/KidsRecorder)
 
-A recorder for research with kids.
+A recorder for research with kids. Associated with the paper: [Anchored Audio Sampling: A Seamless Method for Exploring Children's Thoughts During Deployment Studies](https://makeabilitylab.cs.washington.edu/media/publications/Hiniker_AnchoredAudioSamplingASeamlessMethodForExploringChildrenSThoughtsDuringDeploymentStudies_2019.pdf)
 
 ![]()
 <img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103148.png" width="210">
@@ -261,6 +261,31 @@ For more details, please read the comments in the corresponding files.
 - [Android Preference Support Library v7 and v14](https://developer.android.com/topic/libraries/support-library/packages#v7-preference)
 - [Android CardView and RecyclerView Library](https://developer.android.com/topic/libraries/support-library/packages#v7-cardview)
 - [Gson](https://github.com/google/gson)
+
+
+## Citation
+If you use the code in your paper, then please cite it as:
+
+```
+@inproceedings{Hiniker:2019:AAS:3290605.3300238,
+ author = {Hiniker, Alexis and Froehlich, Jon E. and Zhang, Mingrui and Beneteau, Erin},
+ title = {Anchored Audio Sampling: A Seamless Method for Exploring Children's Thoughts During Deployment Studies},
+ booktitle = {Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems},
+ series = {CHI '19},
+ year = {2019},
+ isbn = {978-1-4503-5970-2},
+ location = {Glasgow, Scotland Uk},
+ pages = {8:1--8:13},
+ articleno = {8},
+ numpages = {13},
+ url = {http://doi.acm.org/10.1145/3290605.3300238},
+ doi = {10.1145/3290605.3300238},
+ acmid = {3300238},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ keywords = {cci, context-aware esm, data collection tools, early childhood, field deployments, study methods},
+} 
+```
 
 ## License
 ```
