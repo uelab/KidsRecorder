@@ -26,7 +26,7 @@ And then configure the dependency:
 
 ```java
 	dependencies {
-	        implementation 'com.github.uelab:KidsRecorder:0.10'
+	        implementation 'com.github.uelab:KidsRecorder:0.11'
 	}
 ```
 
@@ -236,6 +236,9 @@ recordingManager.StopRecording();
 recordingManager.StopRecordingWithoutStartingBackground();
 ```
 In this way, we stopped all recordings (including the formal recording)
+
+#### Merge Preceding Files with the Recording File
+* you can set the recordingManager's `should_mergeprecede` to true to enable the merge function. The defualt is true. It will merge the preceding files with the anchor file together, thus resulting in a larger recording file. If it's false, then separate files will be stored, including the preceding files with name " -preceding.wav" and the anchor file.
 
 _Notice that because the formal recording might interrupt the preceding small clip recording, thus to make sure the preceding recording is long enough, we store the two preceding recordings rather than one. Preceding recordings is named with "Preceding" prefix_
 
