@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/uelab/KidsRecorder.svg?branch=master)](https://travis-ci.com/uelab/KidsRecorder)
 [![](https://jitpack.io/v/uelab/KidsRecorder.svg)](https://jitpack.io/#uelab/KidsRecorder)
 
-A recorder for research with kids. Associated with the paper: [Anchored Audio Sampling: A Seamless Method for Exploring Children's Thoughts During Deployment Studies](https://makeabilitylab.cs.washington.edu/media/publications/Hiniker_AnchoredAudioSamplingASeamlessMethodForExploringChildrenSThoughtsDuringDeploymentStudies_2019.pdf)
+A recorder for research with kids. Associated with the CHI 19 paper: [Anchored Audio Sampling: A Seamless Method for Exploring Children's Thoughts During Deployment Studies](https://makeabilitylab.cs.washington.edu/media/publications/Hiniker_AnchoredAudioSamplingASeamlessMethodForExploringChildrenSThoughtsDuringDeploymentStudies_2019.pdf)
 
 ![]()
 <img src="https://github.com/DrustZ/KidsRecorder/blob/master/Screenshot_20180729-103148.png" width="210">
