@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.userempowermentlab.aasrecorder">
+    package="com.userempowermentlab.aasrecorder"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:replace="android:allowBackup"
+    android:allowBackup="false">
 
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
