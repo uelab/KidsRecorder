@@ -125,6 +125,8 @@ try {
 }  
 ```
 
+* Ask for permissions on `RECORD_AUDIO` and `WRITE_EXTERNAL_STORAGE`. The example activity in the project provides "how to" code.
+
 * Then after checking all permissions, start the `RecordingManager` Service. Because we will interact with the service later, thus we need to bind it to get its instance. The following code describes how to start the service and bind it.
 ```java
 void startRecordingService() {
@@ -213,7 +215,7 @@ Preceding mode means when recording, a preceding time will also be recorded. For
 The mechanism of preceding mode is that `RecordingManager` would keep recording small clips that equal to length ``precedingTime``. When the formal recording is triggered, it would stop the small recording, and keep the former two clips, then start the formal recording. When the formal recording ends, it would start small clips recording again. If there is no formal recording, it will discard the small clips constantly. 
 
 * To enable preceding mode, we need to set 
-```java
+```javaRECORD_AUDIO and WRITE_EXTERNAL_STORAGE
 recordingManager.setPrecedingTime(int); //specify how long before the formal recording we need to keep
 ```
 * Then start the always-on recording using `silent mode`
